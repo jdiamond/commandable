@@ -1,6 +1,6 @@
 # Commandable
 
-A minimal command-line interface framework powerd by [minimist](https://github.com/substack/minimist).
+A minimal command-line interface framework powered by [minimist](https://github.com/substack/minimist).
 
 ## Features:
 

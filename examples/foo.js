@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('./commandable')({
+require('../commandable')({
     run: function(opts) {
         inspect(opts);
     },

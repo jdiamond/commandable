@@ -72,7 +72,7 @@ var opts = {
 test('fn', function(t) {
     commandable([ '-a', 'b', 'fn', '-c', 'd' ], opts).then(function(result) {
         t.equal(result.cmd, 'fn');
-        t.equal(result.opts.$.a, 'b');
+        t.equal(result.opts.$parent.a, 'b');
         t.equal(result.opts.c, 'd');
         t.end();
     });
@@ -81,7 +81,7 @@ test('fn', function(t) {
 test('fn2', function(t) {
     commandable([ '-a', 'b', 'fn2', '-c', 'd' ], opts, function(err, result) {
         t.equal(result.cmd, 'fn2');
-        t.equal(result.opts.$.a, 'b');
+        t.equal(result.opts.$parent.a, 'b');
         t.equal(result.opts.c, 'd');
         t.end();
     });
@@ -90,7 +90,7 @@ test('fn2', function(t) {
 test('obj', function(t) {
     commandable([ '-a', 'b', 'obj', '-c', 'd' ], opts).then(function(result) {
         t.equal(result.cmd, 'obj');
-        t.equal(result.opts.$.a, 'b');
+        t.equal(result.opts.$parent.a, 'b');
         t.equal(result.opts.c, 'd');
         t.end();
     });
@@ -99,7 +99,7 @@ test('obj', function(t) {
 test('obj2', function(t) {
     commandable([ '-a', 'b', 'obj2', '-c', 'd' ], opts, function(err, result) {
         t.equal(result.cmd, 'obj2');
-        t.equal(result.opts.$.a, 'b');
+        t.equal(result.opts.$parent.a, 'b');
         t.equal(result.opts.c, 'd');
         t.end();
     });
@@ -108,7 +108,7 @@ test('obj2', function(t) {
 test('sub', function(t) {
     commandable([ '-a', 'b', 'sub', '-c', 'd' ], opts).then(function(result) {
         t.equal(result.cmd, 'sub');
-        t.equal(result.opts.$.a, 'b');
+        t.equal(result.opts.$parent.a, 'b');
         t.equal(result.opts.c, 'd');
         t.end();
     });
@@ -117,8 +117,8 @@ test('sub', function(t) {
 test('sub2', function(t) {
     commandable([ '-a', 'b', 'sub', '-c', 'd', 'sub2', '-e', 'f' ], opts).then(function(result) {
         t.equal(result.cmd, 'sub2');
-        t.equal(result.opts.$.$.a, 'b');
-        t.equal(result.opts.$.c, 'd');
+        t.equal(result.opts.$parent.$parent.a, 'b');
+        t.equal(result.opts.$parent.c, 'd');
         t.equal(result.opts.e, 'f');
         t.end();
     });
