@@ -9,7 +9,7 @@ require('../commandable')({
         },
         v: 'verbose',
         verbose: {
-            help: 'use verbose output',
+            help: 'log verbose output',
             type: Boolean
         }
     },
@@ -19,28 +19,34 @@ require('../commandable')({
             commands: {
                 list: {
                     help: 'list clusters',
-                    run: function(opts) {
+                    run: function(cmd) {
                         console.log('list clusters');
                     }
                 },
                 add: {
                     help: 'add cluster',
-                    usage: '<name>',
-                    arguments: {
-                        name: { type: String, help: 'cluster name' }
-                    },
-                    run: function(opts) {
-                        console.log('add cluster "%s"');
+                    arguments: [
+                        { name: 'name', type: String, help: 'cluster name', required: true }
+                    ],
+                    run: function(cmd) {
+                        console.log('add cluster "%s"', cmd.args.name);
                     }
                 },
                 rm: {
                     help: 'remove cluster',
-                    usage: '<name>',
-                    arguments: {
-                        name: { type: String, help: 'cluster name' }
+                    arguments: [
+                        { name: 'name', type: String, help: 'cluster name', required: true }
+                    ],
+                    options: {
+                        force: { type: Boolean, help: 'force remove' },
+                        f: 'force'
                     },
-                    run: function(opts) {
-                        console.log('rm cluster "%s"');
+                    run: function(cmd) {
+                        console.log(
+                            '%s cluster "%s"',
+                            (cmd.opts.force ? 'force ' : '') + 'remove',
+                            cmd.args.name
+                        );
                     }
                 }
             }
@@ -48,37 +54,43 @@ require('../commandable')({
         node: {
             help: 'manage nodes',
             commands: {
-                'list': {
-                    help: 'list nodes in cluster',
-                    usage: '[<cluster>]',
-                    arguments: {
-                        cluster: { type: String, help: 'cluster name' }
-                    },
-                    run: function(opts) {
-                        console.log('list nodes in cluster "%s"');
+                list: {
+                    help: 'list nodes',
+                    arguments: '[cluster]',
+                    run: function(cmd) {
+                        console.log('list nodes in cluster "%s"', cmd.args.name);
                     }
                 },
                 add: {
                     help: 'add node to cluster',
-                    usage: '<name> <template> [<cluster>]',
-                    arguments: {
-                        name: { type: String, help: 'node name' },
+                    options: {
                         template: { type: String, help: 'path to template' },
-                        cluster: { type: String, help: 'cluster name' }
+                        t: 'template'
                     },
-                    run: function(opts) {
-                        console.log('add node "%s" with template "%s" to cluster "%s"');
+                    arguments: '<name> [cluster]',
+                    run: function(cmd) {
+                        console.log(
+                            'add node "%s" with template "%s" to cluster "%s"',
+                            cmd.args.name,
+                            cmd.opts.template,
+                            cmd.args.cluster
+                        );
                     }
                 },
                 rm: {
                     help: 'remove node from cluster',
-                    usage: '<name> [<cluster>]',
-                    arguments: {
-                        name: { type: String, help: 'node name' },
-                        cluster: { type: String, help: 'cluster name' }
+                    options: {
+                        force: Boolean,
+                        f: 'force'
                     },
-                    run: function(opts) {
-                        console.log('remove node "%s" from cluster "%s"');
+                    arguments: '<name> [cluster]',
+                    run: function(cmd) {
+                        console.log(
+                            '%s node "%s" from cluster "%s"',
+                            (cmd.opts.force ? 'force ' : '') + 'remove',
+                            cmd.args.name,
+                            cmd.args.cluster
+                        );
                     }
                 }
             }

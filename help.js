@@ -4,12 +4,10 @@ var _ = require('lodash');
 
 module.exports = help;
 
-function help(opts) {
-    if (!opts || !opts.$cfg) { return; }
-
-    var options = getOptions(opts.$cfg);
-    var commands = getCommands(opts.$cfg);
-    var usage = getUsage(opts.$cfg, options, commands);
+function help(cfg) {
+    var options = getOptions(cfg);
+    var commands = getCommands(cfg);
+    var usage = getUsage(cfg, options, commands);
 
     outputUsage(usage);
     outputOptions(options);
@@ -29,11 +27,20 @@ function getUsage(cfg, options, commands) {
     }
 
     if (options.length) {
-        usage += ' [<options>]';
+        usage += ' [options]';
+    }
+
+    if (cfg.arguments && cfg.arguments.length) {
+        usage += ' ' + _(cfg.arguments).map(function(arg) {
+            return arg.required
+                ? '<' + arg.name + '>'
+                : '[' + arg.name + ']'
+            ;
+        }).value().join(' ');
     }
 
     if (commands.length) {
-        usage += cfg.run ? ' [<command>]' : ' <command>';
+        usage += cfg.run ? ' [command]' : ' <command>';
     }
 
     if (cfg.usage) {
