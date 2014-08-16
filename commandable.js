@@ -28,9 +28,11 @@ function run(args, cfg, callback) {
 
         var opts = minimist(args, cfg);
 
+        cfg.arguments = parseArgs(cfg, opts);
+
         var cmd = {
             cfg: cfg,
-            args: getArgs(cfg, opts),
+            args: collectArgs(cfg, opts),
             opts: opts,
             $parent: cfg.$parent,
             $help: help.bind(null, cfg)
@@ -57,10 +59,10 @@ function run(args, cfg, callback) {
             var missing = firstMissing(cmd);
 
             if (missing) {
-                console.error('Missing required argument: "%s"', missing);
+                console.error('Missing: <%s>', missing);
                 console.error();
                 cmd.$help();
-                resolve();
+                resolve(); // notify error?
             } else if (cfg.callback) {
                 cfg.callback(cmd, function(err, result) {
                     if (err) reject(err);
@@ -75,22 +77,20 @@ function run(args, cfg, callback) {
     }).nodeify(callback);
 }
 
-function getArgs(cfg, opts) {
-    if (typeof cfg.arguments === 'string') {
-        cfg.arguments = _(cfg.arguments.split(' '))
-            .map(function(arg) {
-                return {
-                    name: arg.slice(1, -1),
-                    type: String,
-                    required: arg.charAt(0) === '<'
-                };
-            })
-            .value()
-        ;
-    }
+function parseArgs(cfg, opts) {
+    return typeof cfg.arguments === 'string'
+        ? _.map(cfg.arguments.split(' '), function(arg) {
+            return {
+                name: arg.slice(1, -1),
+                type: String,
+                required: arg.charAt(0) === '<'
+            };
+        })
+        : cfg.arguments || []
+    ;
+}
 
-    cfg.arguments = cfg.arguments || [];
-
+function collectArgs(cfg, opts) {
     return _(cfg.arguments)
         .map(function(arg, i) {
             return [ arg.name || i, opts._[i] ];
@@ -102,14 +102,7 @@ function getArgs(cfg, opts) {
 };
 
 function firstMissing(cmd) {
-    // reduce?
-    var missing = null;
-    cmd.cfg.arguments.forEach(function(arg, i) {
-        if (!missing && cmd.cfg.arguments[i].required) {
-            if (!cmd.args[i]) {
-                missing = cmd.cfg.arguments[i].name;
-            }
-        }
-    });
-    return missing;
+    return cmd.cfg.arguments.reduce(function(missing, arg) {
+        return !missing && arg.required && !cmd.args[arg.name] && arg.name;
+    }, null);
 }
