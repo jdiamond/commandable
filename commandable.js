@@ -103,6 +103,6 @@ function collectArgs(cfg, opts) {
 
 function firstMissing(cmd) {
     return cmd.cfg.arguments.reduce(function(missing, arg) {
-        return !missing && arg.required && !cmd.args[arg.name] && arg.name;
+        return missing || (arg.required && !cmd.args[arg.name] && arg.name);
     }, null);
 }
