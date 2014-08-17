@@ -9,39 +9,38 @@ module.exports = run;
 
 // bash completions?
 
-function run(args, cfg, callback) {
-    if (!Array.isArray(args)) {
-        callback = cfg;
-        cfg = args;
-        args = null;
+function run(argv, cmd, callback) {
+    if (!Array.isArray(argv)) {
+        callback = cmd;
+        cmd = argv;
+        argv = null;
     }
 
     return new Promise(function(resolve, reject) {
-        args = args || process.argv.slice(2);
-        cfg = cfg || {};
+        argv = argv || process.argv.slice(2);
+        cmd = cmd || {};
 
-        cfg.stopEarly = true;
+        cmd.stopEarly = true;
 
-        cfg.alias = _.extend(cfg.alias || {}, _(cfg.options).pick(_.isString).value());
+        cmd.alias = _.extend(cmd.alias || {}, _(cmd.options).pick(_.isString).value());
         // TODO: populate boolean and string options?
         // support other types like dates and arrays?
 
-        var opts = minimist(args, cfg);
+        var opts = minimist(argv, cmd);
 
-        cfg.arguments = parseArgs(cfg, opts);
+        cmd.arguments = parseArgs(cmd, opts);
 
-        var cmd = {
-            cfg: cfg,
-            args: collectArgs(cfg, opts),
+        var ctx = {
+            cmd: cmd,
+            args: collectArgs(cmd, opts),
             opts: opts,
-            $parent: cfg.$parent,
-            $help: help.bind(null, cfg)
+            sup: cmd.sup
         };
 
         if (opts.help || opts.h) {
-            help(cfg);
-        } else if (cfg.commands && opts._.length && opts._[0] in cfg.commands) {
-            var sub = cfg.commands[opts._[0]];
+            help(cmd);
+        } else if (cmd.commands && opts._.length && opts._[0] in cmd.commands) {
+            var sub = cmd.commands[opts._[0]];
 
             if (typeof sub === 'function') {
                 var fn = sub;
@@ -50,48 +49,48 @@ function run(args, cfg, callback) {
             }
 
             sub.name = opts._[0];
-            sub.$parent = opts;
+            sub.sup = opts;
 
             resolve(run(opts._.slice(1), sub));
         } else {
             // where to check for unknown commands?
 
-            var missing = firstMissing(cmd);
+            var missing = firstMissing(ctx);
 
             if (missing) {
                 console.error('Missing: <%s>', missing);
                 console.error();
-                cmd.$help();
+                help(cmd);
                 resolve(); // notify error?
-            } else if (cfg.callback) {
-                cfg.callback(cmd, function(err, result) {
+            } else if (cmd.callback) {
+                cmd.callback(ctx, function(err, result) {
                     if (err) reject(err);
                     else     resolve(result);
                 });
-            } else if (cfg.run) {
-                resolve(cfg.run(cmd));
+            } else if (cmd.run) {
+                resolve(cmd.run(ctx));
             } else {
-                help(cfg);
+                help(cmd);
             }
         }
     }).nodeify(callback);
 }
 
-function parseArgs(cfg, opts) {
-    return typeof cfg.arguments === 'string'
-        ? _.map(cfg.arguments.split(' '), function(arg) {
+function parseArgs(cmd, opts) {
+    return typeof cmd.arguments === 'string'
+        ? _.map(cmd.arguments.split(' '), function(arg) {
             return {
                 name: arg.slice(1, -1),
                 type: String,
                 required: arg.charAt(0) === '<'
             };
         })
-        : cfg.arguments || []
+        : cmd.arguments || []
     ;
 }
 
-function collectArgs(cfg, opts) {
-    return _(cfg.arguments)
+function collectArgs(cmd, opts) {
+    return _(cmd.arguments)
         .map(function(arg, i) {
             return [ arg.name || i, opts._[i] ];
         })
@@ -101,8 +100,8 @@ function collectArgs(cfg, opts) {
     ;
 };
 
-function firstMissing(cmd) {
-    return cmd.cfg.arguments.reduce(function(missing, arg) {
-        return missing || (arg.required && !cmd.args[arg.name] && arg.name);
+function firstMissing(ctx) {
+    return ctx.cmd.arguments.reduce(function(missing, arg) {
+        return missing || (arg.required && !ctx.args[arg.name] && arg.name);
     }, null);
 }

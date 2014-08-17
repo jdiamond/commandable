@@ -4,34 +4,34 @@ var _ = require('lodash');
 
 module.exports = help;
 
-function help(cfg) {
-    var options = getOptions(cfg);
-    var commands = getCommands(cfg);
-    var usage = getUsage(cfg, options, commands);
+function help(cmd) {
+    var options = getOptions(cmd);
+    var commands = getCommands(cmd);
+    var usage = getUsage(cmd, options, commands);
 
     outputUsage(usage);
     outputOptions(options);
     outputCommands(commands);
 }
 
-function getUsage(cfg, options, commands) {
+function getUsage(cmd, options, commands) {
     var usage = '';
 
-    if (cfg.$parent) {
-        (function sup(cfg) {
-            if (cfg) {
-                usage = ' ' + cfg._[0] + usage;
-                sup(cfg.$parent);
+    if (cmd.sup) {
+        (function sup(cmd) {
+            if (cmd) {
+                usage = ' ' + cmd._[0] + usage;
+                sup(cmd.sup);
             }
-        })(cfg.$parent);
+        })(cmd.sup);
     }
 
     if (options.length) {
         usage += ' [options]';
     }
 
-    if (cfg.arguments && cfg.arguments.length) {
-        usage += ' ' + _(cfg.arguments).map(function(arg) {
+    if (cmd.arguments && cmd.arguments.length) {
+        usage += ' ' + _(cmd.arguments).map(function(arg) {
             return arg.required
                 ? '<' + arg.name + '>'
                 : '[' + arg.name + ']'
@@ -40,24 +40,20 @@ function getUsage(cfg, options, commands) {
     }
 
     if (commands.length) {
-        usage += cfg.run ? ' [command]' : ' <command>';
+        usage += cmd.run ? ' [command]' : ' <command>';
     }
 
-    if (cfg.usage) {
-        usage += ' ' + cfg.usage;
+    if (cmd.usage) {
+        usage += ' ' + cmd.usage;
     }
 
     return usage.trim();
 }
 
-function outputUsage(usage) {
-    console.log('Usage: %s %s', path.basename(process.argv[1]), usage);
-}
+function getOptions(cmd) {
+    var options = cmd.options || {};
 
-function getOptions(cfg) {
-    var options = cfg.options || {};
-
-    var aliases = _(cfg.alias || {})
+    var aliases = _(cmd.alias || {})
         .defaults(_.pick(options, _.isString))
         .defaults({ h: 'help' })
         .pairs()
@@ -97,8 +93,8 @@ function getOptions(cfg) {
     }
 }
 
-function getCommands(cfg) {
-    var commands = cfg.commands || {};
+function getCommands(cmd) {
+    var commands = cmd.commands || {};
 
     var aliases = _(commands).pick(_.isString).value();
 
@@ -116,6 +112,10 @@ function getCommands(cfg) {
         })
         .value()
     ;
+}
+
+function outputUsage(usage) {
+    console.log('Usage: %s %s', path.basename(process.argv[1]), usage);
 }
 
 function outputOptions(options) {
