@@ -1,13 +1,14 @@
 # Commandable
 
-A minimal command-line interface framework powered by [minimist](https://github.com/substack/minimist).
+A minimal command-line interface framework powered by
+[minimist](https://github.com/substack/minimist).
 
 ## Features:
 
 - Commands, sub-commands, sub-sub-commands, etc
 - Options are scoped to their commands
 - Control option parsing with standard minimist options
-- API supports both promises and callbacks
+- Automatic help output if you describe it
 
 ## Install
 
@@ -20,30 +21,21 @@ npm i -S commandable
 ```
 var commandable = require('commandable');
 
-// commandable(args, opts, callback);
-
-// args defaults to process.argv.slice(2)
-// opts are minimist options plus a few extras
-// callback is optional
-// returns a promise
-
-// Example:
-
 commandable({
-    // minimist options go here
-    run: function(opts) {
-        // return a value or a promise
-    },
     commands: {
-        foo: function(opts) {}, // run with no minimist options
+        foo: function(cmd) {},
         bar: {
-            // minimist options go here
-            run: function(opts) {},
+            help: 'do bar',
+            options: {},
+            arguments: '',
+            run: function(cmd) {},
             commands: {
-                baz: function(opts) {}, // run with no minimist options
+                baz: function(cmd) {},
                 quux: {
-                    // minimist options go here
-                    run: function(opts) {}
+                    help: '',
+                    options: {},
+                    arguments: [],
+                    run: function(cmd) {}
                 }
             }
         }
@@ -51,39 +43,37 @@ commandable({
 });
 ```
 
-If you want callbacks, replace `run` with `callback`, make sure you declare the callback argument, and call it like `cb(err)` or `cb(null, result)`:
+If you want callbacks, replace `run` with `callback`, make sure you declare the
+callback argument, and call it like `cb(err)` or `cb(null, result)`:
 
 ```
 commandable({
-    // minimist options go here
-    callback: function(opts, cb) {
-        // cb(err, result);
+    callback: function(cmd, cb) {
+        // cb(err) or cb(null, result);
     },
     commands: {
-        foo: function(opts, cb) {} // callback with no minimist options
+        foo: function(cmd, cb) {}
         // etc
     }
 });
 ```
 
-The `opts` argument is just the object returned from minimist plus a `$` property pointing to the "parent" options.
-
-For example, the `opts` argument passed in to the above example with this command line:
+The `cmd` argument looks like this:
 
 ```
-./example.js --aaa bbb bar --ccc ddd baz --eee fff
+{
+    name: 'command',
+    cfg: { /* command config */ },
+    sup: { /* super command config */ },
+    opts: { /* parsed options */ },
+    args: { /* parsed arguments */ },
+    rest: [ /* remaining arguments */ ]
+}
 ```
 
-...looks like this:
+### TODO
 
-```
-{ _: [],
-  eee: 'fff',
-  '$':
-   { _: [ 'baz', '--eee', 'fff' ],
-     ccc: 'ddd',
-     '$':
-      { _: [ 'bar', '--ccc', 'ddd', 'baz', '--eee', 'fff' ],
-        aaa: 'bbb',
-        '$': undefined } } }
-```
+- bash completions
+- catch errors
+- output to standard error on error
+- env vars
