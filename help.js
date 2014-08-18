@@ -4,34 +4,27 @@ var _ = require('lodash');
 
 module.exports = help;
 
-function help(cmd) {
-    var options = getOptions(cmd);
-    var commands = getCommands(cmd);
-    var usage = getUsage(cmd, options, commands);
+function help(cfg) {
+    var options = getOptions(cfg);
+    var commands = getCommands(cfg);
+    var usage = getUsage(cfg, options, commands);
 
     outputUsage(usage);
     outputOptions(options);
     outputCommands(commands);
 }
 
-function getUsage(cmd, options, commands) {
-    var usage = '';
-
-    if (cmd.sup) {
-        (function sup(cmd) {
-            if (cmd) {
-                usage = ' ' + cmd._[0] + usage;
-                sup(cmd.sup);
-            }
-        })(cmd.sup);
-    }
+function getUsage(cfg, options, commands) {
+    var usage = (function sup(cfg) {
+        return cfg.name ? sup(cfg.sup) + ' ' + cfg.name : '';
+    })(cfg);
 
     if (options.length) {
         usage += ' [options]';
     }
 
-    if (cmd.arguments && cmd.arguments.length) {
-        usage += ' ' + _(cmd.arguments).map(function(arg) {
+    if (cfg.arguments && cfg.arguments.length) {
+        usage += ' ' + _(cfg.arguments).map(function(arg) {
             return arg.required
                 ? '<' + arg.name + '>'
                 : '[' + arg.name + ']'
@@ -40,20 +33,20 @@ function getUsage(cmd, options, commands) {
     }
 
     if (commands.length) {
-        usage += cmd.run ? ' [command]' : ' <command>';
+        usage += cfg.run ? ' [command]' : ' <command>';
     }
 
-    if (cmd.usage) {
-        usage += ' ' + cmd.usage;
+    if (cfg.usage) {
+        usage += ' ' + cfg.usage;
     }
 
     return usage.trim();
 }
 
-function getOptions(cmd) {
-    var options = cmd.options || {};
+function getOptions(cfg) {
+    var options = cfg.options || {};
 
-    var aliases = _(cmd.alias || {})
+    var aliases = _(cfg.alias || {})
         .defaults(_.pick(options, _.isString))
         .defaults({ h: 'help' })
         .pairs()
@@ -93,8 +86,8 @@ function getOptions(cmd) {
     }
 }
 
-function getCommands(cmd) {
-    var commands = cmd.commands || {};
+function getCommands(cfg) {
+    var commands = cfg.commands || {};
 
     var aliases = _(commands).pick(_.isString).value();
 
