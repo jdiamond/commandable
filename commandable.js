@@ -15,7 +15,7 @@ function main(argv, cfg, callback) {
         argv = null;
     }
 
-    argv = (argv || process.argv).slice(2);
+    argv = argv || process.argv.slice(2);
     cfg = cfg || {};
 
     return run(argv, cfg).nodeify(callback);
