@@ -172,11 +172,11 @@ test('normalize options', function(t) {
 test('normalize commands', function(t) {
     var normal = commandable.normalize({
         commands: {
-            fn: function() {},
-            obj: { run: function() {} },
+            fn: function(cmd) {},
+            obj: { run: function(cmd) {} },
             parent: {
                 commands: {
-                    child: function() {}
+                    child: function(cmd) {}
                 }
             }
         }
@@ -193,6 +193,15 @@ test('normalize commands', function(t) {
     t.equal(normal.commands.parent.name, 'parent');
     t.equal(normal.commands.parent.commands.child.name, 'child');
     t.equal(normal.commands.parent.commands.child.sup.name, 'parent');
+
+    t.end();
+});
+
+test('normalize main command', function(t) {
+    var normal = commandable.normalize(function(cmd) {});
+
+    t.equal(typeof normal, 'object');
+    t.equal(typeof normal.run, 'function');
 
     t.end();
 });

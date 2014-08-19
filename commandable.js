@@ -69,6 +69,12 @@ function run(argv, cfg, sup) {
 }
 
 function normalize(cfg) {
+    if (typeof cfg === 'function') {
+        var fn = cfg;
+        cfg = {};
+        cfg[fn.length === 2 ? 'callback' : 'run'] = fn;
+    }
+
     cfg.arguments =
         typeof cfg.arguments === 'string'
         ? _.map(cfg.arguments.split(' '), function(arg) {
@@ -91,16 +97,12 @@ function normalize(cfg) {
 
     cfg.commands = _(cfg.commands || {})
         .mapValues(function(sub, name) {
-            if (typeof sub === 'function') {
-                var fn = sub;
-                sub = {};
-                sub[fn.length === 2 ? 'callback' : 'run'] = fn;
-            }
+            sub = normalize(sub);
 
             sub.name = name;
             sub.sup = cfg;
 
-            return normalize(sub);
+            return sub;
         })
         .value()
     ;
