@@ -1,3 +1,5 @@
+'use strict';
+
 var path = require('path');
 var columnify = require('columnify');
 var _ = require('lodash');

@@ -1,3 +1,5 @@
+'use strict';
+
 var path = require('path');
 
 var Promise  = require('bluebird');
@@ -56,8 +58,11 @@ function run(argv, cfg, sup) {
                 resolve(); // notify error?
             } else if (cfg.callback) {
                 cfg.callback(cmd, function(err, result) {
-                    if (err) reject(err);
-                    else     resolve(result);
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
                 });
             } else if (cfg.run) {
                 resolve(cfg.run(cmd));
@@ -134,7 +139,7 @@ function collectArgs(args, cfg) {
         .zipObject()
         .value()
     ;
-};
+}
 
 function findMissing(cmd) {
     return cmd.cfg.arguments.reduce(function(missing, arg) {

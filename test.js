@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 var Promise = require('bluebird');
 var test = require('tape');
 
@@ -59,6 +61,7 @@ test('fn', function(t) {
 
 test('fn2', function(t) {
     commandable([ '-a', 'b', 'fn2', '-c', 'd' ], cfg, function(err, cmd) {
+        if (err) { return t.end(err); }
         t.equal(cmd.cfg.name, 'fn2');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -77,6 +80,7 @@ test('obj', function(t) {
 
 test('obj2', function(t) {
     commandable([ '-a', 'b', 'obj2', '-c', 'd' ], cfg, function(err, cmd) {
+        if (err) { return t.end(err); }
         t.equal(cmd.cfg.name, 'obj2');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -114,6 +118,7 @@ test('none', function(t) {
 
 test('callback', function(t) {
     commandable([ '-a', 'b', '-c', 'd' ], cfg, function(err, cmd) {
+        if (err) { return t.end(err); }
         t.equal(cmd.cfg.name, undefined);
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
