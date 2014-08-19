@@ -8,6 +8,8 @@ var help = require('./help');
 
 module.exports = main;
 
+module.exports.normalize = normalize; // for testing
+
 function main(argv, cfg, callback) {
     if (!Array.isArray(argv)) {
         callback = cfg;
@@ -41,17 +43,6 @@ function run(argv, cfg, sup) {
             help(cfg);
         } else if (cfg.commands && parsed._.length && parsed._[0] in cfg.commands) {
             var sub = cfg.commands[parsed._[0]];
-
-            // this should be in normalize
-            if (typeof sub === 'function') {
-                var fn = sub;
-                sub = {};
-                sub[fn.length === 2 ? 'callback' : 'run'] = fn;
-            }
-
-            sub.name = parsed._[0];
-            sub.sup = cfg;
-
             resolve(run(parsed._.slice(1), sub, cmd));
         } else {
             // where to check for unknown commands?
@@ -90,6 +81,14 @@ function normalize(cfg) {
         : cfg.arguments || []
     ;
 
+    cfg.options = _.mapValues(cfg.options || {}, function(val, key) {
+        if (typeof val === 'function') {
+            return { type: val };
+        } else {
+            return val;
+        }
+    });
+
     cfg.commands = _(cfg.commands || {})
         .mapValues(function(sub, name) {
             if (typeof sub === 'function') {
@@ -101,10 +100,12 @@ function normalize(cfg) {
             sub.name = name;
             sub.sup = cfg;
 
-            return sub;
+            return normalize(sub);
         })
         .value()
     ;
+
+    return cfg;
 }
 
 function parse(argv, cfg) {

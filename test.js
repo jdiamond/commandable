@@ -141,3 +141,58 @@ test('throw', function(t) {
         t.end();
     });
 });
+
+test('normalize arguments', function(t) {
+    var normal = commandable.normalize({
+        arguments: '<required> [optional]'
+    });
+
+    t.equal(normal.arguments.length, 2);
+    t.equal(normal.arguments[0].name, 'required');
+    t.equal(normal.arguments[1].name, 'optional');
+
+    t.end();
+});
+
+test('normalize options', function(t) {
+    var normal = commandable.normalize({
+        options: {
+            bool: Boolean,
+            str: String
+        }
+    });
+
+    t.equal(Object.keys(normal.options).length, 2);
+    t.equal(normal.options.bool.type, Boolean);
+    t.equal(normal.options.str.type, String);
+
+    t.end();
+});
+
+test('normalize commands', function(t) {
+    var normal = commandable.normalize({
+        commands: {
+            fn: function() {},
+            obj: { run: function() {} },
+            parent: {
+                commands: {
+                    child: function() {}
+                }
+            }
+        }
+    });
+
+    t.equal(Object.keys(normal.commands).length, 3);
+
+    t.equal(normal.commands.fn.name, 'fn');
+    t.equal(typeof normal.commands.fn.run, 'function');
+
+    t.equal(normal.commands.obj.name, 'obj');
+    t.equal(typeof normal.commands.obj.run, 'function');
+
+    t.equal(normal.commands.parent.name, 'parent');
+    t.equal(normal.commands.parent.commands.child.name, 'child');
+    t.equal(normal.commands.parent.commands.child.sup.name, 'parent');
+
+    t.end();
+});
