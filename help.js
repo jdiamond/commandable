@@ -48,6 +48,13 @@ function getUsage(cfg, options, commands) {
 function getOptions(cfg) {
     var options = cfg.options || {};
 
+    (function mergeParentOptions(cfg) {
+        if (cfg) {
+            options = _.extend(options, cfg.options || {});
+            mergeParentOptions(cfg.sup);
+        }
+    })(cfg.sup);
+
     var aliases = _(cfg.alias || {})
         .defaults(_.pick(options, _.isString))
         .defaults({ h: 'help' })
