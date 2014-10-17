@@ -16,6 +16,8 @@ function help(cfg, log) {
     outputUsage(usage, log);
     outputOptions(options, log);
     outputCommands(commands, log);
+
+    log();
 }
 
 function getUsage(cfg, options, commands) {
