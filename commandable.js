@@ -75,17 +75,31 @@ function run(argv, cfg, sup) {
                 error('Missing argument: <%s>', missing);
                 error();
                 help(cfg, error);
-                resolve();
-            } else if (cfg.callback) {
-                cfg.callback(cmd, function(err, result) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(result);
+                return resolve();
+            }
+
+            if (cfg.callback || cfg.run) {
+                (function init(cfg) {
+                    if (cfg.sup) {
+                        init(cfg.sup);
                     }
-                });
-            } else if (cfg.run) {
-                resolve(cfg.run(cmd));
+
+                    if (cfg.init) {
+                        cfg.init(cmd);
+                    }
+                })(cfg);
+
+                if (cfg.callback) {
+                    cfg.callback(cmd, function(err, result) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    });
+                } else if (cfg.run) {
+                    resolve(cfg.run(cmd));
+                }
             } else {
                 help(cfg);
             }
@@ -138,22 +152,30 @@ function normalize(cfg) {
 function parse(argv, cfg) {
     cfg.stopEarly = true;
 
-    cfg.alias = _.extend(cfg.alias || {}, _(cfg.options).pick(_.isString).value());
+    var mergedOptions = (function mergeOptions(cfg, options) {
+        options = _.extend(options, cfg.options);
+        return cfg.sup ? mergeOptions(cfg.sup, options) : options;
+    })(cfg, { h: 'help', help: { type: Boolean } });
 
-    cfg.boolean = _(cfg.options).pairs().filter(function(pair) {
+    cfg.alias = _.extend(cfg.alias || {}, _(mergedOptions).pick(_.isString).value());
+
+    cfg.boolean = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
+        // only include boolean options
         return type === Boolean;
     }).pluck(0).value();
 
-    cfg.string = _(cfg.options).pairs().filter(function(pair) {
+    cfg.string = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
-        return type !== Boolean;
+        // remove boolean options and aliases
+        return type !== Boolean && typeof type !== 'string';
     }).pluck(0).value();
 
     var unknown;
 
-    if (!_.isEmpty(cfg.options)) {
+    if (!_.isEmpty(_.omit(mergedOptions, [ 'h', 'help' ]))) {
         cfg.unknown = function(name) {
+            // arguments also get passed to unknown
             if (name.charAt(0) === '-') {
                 if (!unknown) {
                     unknown = name;
@@ -172,7 +194,8 @@ function parse(argv, cfg) {
         };
     }
 
-    _(cfg.options).pairs().filter(function(pair) {
+    // convert strings to numbers
+    _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         return type === Number;
     }).pluck(0).forEach(function(num) {

@@ -13,6 +13,13 @@ require('../commandable')({
             type: Boolean
         }
     },
+    init: function(cmd) {
+        console.log('devops.js v1.2.3');
+
+        if (cmd.opts.config) {
+            console.log('config file: %s', cmd.opts.config);
+        }
+    },
     commands: {
         cluster: {
             help: 'manage clusters',
