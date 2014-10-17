@@ -79,13 +79,17 @@ function run(argv, cfg, sup) {
             }
 
             if (cfg.callback || cfg.run) {
+                var inits = [];
+
                 (function init(cfg) {
                     if (cfg.sup) {
                         init(cfg.sup);
                     }
 
                     if (cfg.init) {
-                        cfg.init(cmd);
+                        inits.push(function() {
+                            return cfg.init(cmd);
+                        });
                     }
                 })(cfg);
 
@@ -98,7 +102,10 @@ function run(argv, cfg, sup) {
                         }
                     });
                 } else if (cfg.run) {
-                    resolve(cfg.run(cmd));
+                    resolve(Promise
+                        .each(inits, function(init) { return init(); })
+                        .then(function() { return cfg.run(cmd); })
+                    );
                 }
             } else {
                 help(cfg);
