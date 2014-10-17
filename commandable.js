@@ -58,12 +58,21 @@ function run(argv, cfg, sup) {
             sub.error = cfg.error;
             resolve(run(parsed._.slice(1), sub, cmd));
         } else {
-            // where to check for unknown commands?
+            if (!_.isEmpty(cfg.commands) && parsed._.length) {
+                var parents = (function sup(cfg) {
+                    return cfg.name ? sup(cfg.sup) + ' ' + cfg.name : '';
+                })(cfg);
+
+                error('Unknown command: %s', (parents + ' ' + parsed._[0]).trim());
+                error();
+                help(cfg, error);
+                return resolve();
+            }
 
             var missing = findMissing(cmd);
 
             if (missing) {
-                error('Missing: <%s>', missing);
+                error('Missing argument: <%s>', missing);
                 error();
                 help(cfg, error);
                 resolve();
@@ -145,11 +154,13 @@ function parse(argv, cfg) {
 
     if (!_.isEmpty(cfg.options)) {
         cfg.unknown = function(name) {
-            if (!unknown) {
-                unknown = name;
-            }
+            if (name.charAt(0) === '-') {
+                if (!unknown) {
+                    unknown = name;
+                }
 
-            return false;
+                return false;
+            }
         };
     }
 

@@ -183,6 +183,17 @@ test('unknown options', function(t) {
     ;
 });
 
+test('unknown command', function(t) {
+    errorOutput = '';
+
+    commandable([ 'unknown' ], cfg)
+        .then(function() {
+            t.ok(errorOutput);
+            t.end();
+        })
+    ;
+});
+
 test('normalize arguments', function(t) {
     var normal = commandable.normalize({
         arguments: '<required> [optional]'
