@@ -7,10 +7,9 @@ var test = require('tape');
 
 var commandable = require('./commandable');
 
+var errorOutput = '';
+
 var cfg = {
-    run: function(cmd) {
-        return cmd;
-    },
     commands: {
         fn: function(cmd) {
             return cmd;
@@ -46,7 +45,23 @@ var cfg = {
         },
         throw: function(cmd) {
             throw new Error('throw');
+        },
+        opt: {
+            options: {
+                bool: Boolean,
+                num: Number,
+                str: String
+            },
+            run: function(cmd) {
+                return cmd;
+            }
         }
+    },
+    run: function(cmd) {
+        return cmd;
+    },
+    error: function(output) {
+        errorOutput += output;
     }
 };
 
@@ -145,6 +160,27 @@ test('throw', function(t) {
         t.equal(err.message, 'throw');
         t.end();
     });
+});
+
+test('known options', function(t) {
+    commandable([ 'opt', '--bool', '--num', '123', '--str', 'abc' ], cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'opt');
+        t.equal(cmd.opts.bool, true);
+        t.equal(cmd.opts.num, 123);
+        t.equal(cmd.opts.str, 'abc');
+        t.end();
+    });
+});
+
+test('unknown options', function(t) {
+    errorOutput = '';
+
+    commandable([ 'opt', '--foo', 'bar' ], cfg)
+        .then(function() {
+            t.ok(errorOutput);
+            t.end();
+        })
+    ;
 });
 
 test('normalize arguments', function(t) {

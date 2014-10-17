@@ -27,9 +27,18 @@ function main(argv, cfg, callback) {
 
 function run(argv, cfg, sup) {
     return new Promise(function(resolve, reject) {
+        var error = cfg.error || console.error;
+
         normalize(cfg);
 
         var parsed = parse(argv, cfg);
+
+        if (parsed.unknown) {
+            error('Unknown option: %s', parsed.unknown);
+            error();
+            help(cfg, error);
+            return resolve();
+        }
 
         var proto = sup && sup.opts || Object.prototype;
 
@@ -45,6 +54,8 @@ function run(argv, cfg, sup) {
             help(cfg);
         } else if (cfg.commands && parsed._.length && parsed._[0] in cfg.commands) {
             var sub = cfg.commands[parsed._[0]];
+            sub.log = cfg.log;
+            sub.error = cfg.error;
             resolve(run(parsed._.slice(1), sub, cmd));
         } else {
             // where to check for unknown commands?
@@ -52,10 +63,10 @@ function run(argv, cfg, sup) {
             var missing = findMissing(cmd);
 
             if (missing) {
-                console.error('Missing: <%s>', missing);
-                console.error();
-                help(cfg);
-                resolve(); // notify error?
+                error('Missing: <%s>', missing);
+                error();
+                help(cfg, error);
+                resolve();
             } else if (cfg.callback) {
                 cfg.callback(cmd, function(err, result) {
                     if (err) {
@@ -121,14 +132,45 @@ function parse(argv, cfg) {
     cfg.alias = _.extend(cfg.alias || {}, _(cfg.options).pick(_.isString).value());
 
     cfg.boolean = _(cfg.options).pairs().filter(function(pair) {
-        return pair[1] === Boolean || pair[1].type === Boolean;
+        var type = pair[1] && pair[1].type || pair[1];
+        return type === Boolean;
     }).pluck(0).value();
 
     cfg.string = _(cfg.options).pairs().filter(function(pair) {
-        return pair[1] === String || pair[1].type === String;
+        var type = pair[1] && pair[1].type || pair[1];
+        return type !== Boolean;
     }).pluck(0).value();
 
-    return minimist(argv, cfg);
+    var unknown;
+
+    if (!_.isEmpty(cfg.options)) {
+        cfg.unknown = function(name) {
+            if (!unknown) {
+                unknown = name;
+            }
+
+            return false;
+        };
+    }
+
+    var parsed = minimist(argv, cfg);
+
+    if (unknown) {
+        return {
+            unknown: unknown
+        };
+    }
+
+    _(cfg.options).pairs().filter(function(pair) {
+        var type = pair[1] && pair[1].type || pair[1];
+        return type === Number;
+    }).pluck(0).forEach(function(num) {
+        if (parsed[num]) {
+            parsed[num] = Number(parsed[num]);
+        }
+    });
+
+    return parsed;
 }
 
 function collectArgs(args, cfg) {

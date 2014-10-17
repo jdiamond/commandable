@@ -6,14 +6,16 @@ var _ = require('lodash');
 
 module.exports = help;
 
-function help(cfg) {
+function help(cfg, log) {
     var options = getOptions(cfg);
     var commands = getCommands(cfg);
     var usage = getUsage(cfg, options, commands);
 
-    outputUsage(usage);
-    outputOptions(options);
-    outputCommands(commands);
+    log = log || cfg.log || console.log;
+
+    outputUsage(usage, log);
+    outputOptions(options, log);
+    outputCommands(commands, log);
 }
 
 function getUsage(cfg, options, commands) {
@@ -116,17 +118,17 @@ function getCommands(cfg) {
     ;
 }
 
-function outputUsage(usage) {
-    console.log('Usage: %s %s', path.basename(process.argv[1]), usage);
+function outputUsage(usage, log) {
+    log('Usage: %s %s', path.basename(process.argv[1]), usage);
 }
 
-function outputOptions(options) {
+function outputOptions(options, log) {
     if (options.length) {
-        console.log();
-        console.log('Options:');
-        console.log();
+        log();
+        log('Options:');
+        log();
 
-        console.log(columnify(options, {
+        log(columnify(options, {
             showHeaders: false,
             columnSplitter: '   ',
             columns: [ 'empty', 'names', 'help' ],
@@ -139,13 +141,13 @@ function outputOptions(options) {
     }
 }
 
-function outputCommands(commands) {
+function outputCommands(commands, log) {
     if (commands.length) {
-        console.log();
-        console.log('Commands:');
-        console.log();
+        log();
+        log('Commands:');
+        log();
 
-        console.log(columnify(commands, {
+        log(columnify(commands, {
             // maxLineWidth: process.stdout.columns,
             showHeaders: false,
             columnSplitter: '   ',

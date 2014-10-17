@@ -75,5 +75,10 @@ The `cmd` argument looks like this:
 
 - bash completions
 - catch errors
-- output to standard error on error
 - env vars
+- notes
+- opts likeThis in code, like-this in cli (or maybe both)
+- default in opts
+- pre- and post-command callbacks
+- required rest args
+- Date type
