@@ -67,6 +67,21 @@ var cfg = {
                 return cmd;
             }
         },
+        defaultOpts: {
+            options: {
+                foo: {
+                    type: String,
+                    default: 'defaultFoo'
+                },
+                bar: {
+                    type: String,
+                    default: 'defaultBar'
+                }
+            },
+            run: function(cmd) {
+                return cmd;
+            }
+        },
         paramCaseArgs: {
             arguments: '<foo-bar> [baz-quux]',
             run: function(cmd) {
@@ -204,6 +219,14 @@ test('camelCaseOpts', function(t) {
     commandable([ 'camel-case-opts', '--foo-bar', 'opt1', '--baz-quux', 'opt2' ], cfg).then(function(cmd) {
         t.equal(cmd.opts.fooBar, 'opt1');
         t.equal(cmd.opts.bazQuux, 'opt2');
+        t.end();
+    });
+});
+
+test('defaultOpts', function(t) {
+    commandable([ 'default-opts', '--foo', 'notDefaultFoo' ], cfg).then(function(cmd) {
+        t.equal(cmd.opts.foo, 'notDefaultFoo');
+        t.equal(cmd.opts.bar, 'defaultBar');
         t.end();
     });
 });

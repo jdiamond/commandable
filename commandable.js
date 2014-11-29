@@ -221,6 +221,14 @@ function parse(argv, cfg) {
         return type !== Boolean && type !== Number;
     }).pluck(0).map(changeCase.paramCase).value();
 
+    cfg.default = cfg.default || {};
+
+    Object.keys(mergedOptions).forEach(function(key) {
+        if (mergedOptions[key].default) {
+            cfg.default[key] = mergedOptions[key].default;
+        }
+    });
+
     var unknown;
 
     if (!_.isEmpty(_.omit(mergedOptions, [ 'h', 'help' ]))) {

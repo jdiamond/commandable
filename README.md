@@ -63,11 +63,11 @@ The `cmd` argument looks like this:
 ```
 {
     name: 'command',
-    cfg: { /* command config */ },
-    sup: { /* super command config */ },
-    opts: { /* parsed options */ },
-    args: { /* parsed arguments */ },
-    rest: [ /* remaining arguments */ ]
+    cfg:  { /* command config       */ },
+    sup:  { /* super command config */ },
+    opts: { /* parsed options       */ },
+    args: { /* parsed arguments     */ },
+    rest: [ /* remaining arguments  */ ]
 }
 ```
 
@@ -77,7 +77,7 @@ The `cmd` argument looks like this:
 - catch errors
 - env vars
 - notes
-- default in opts
 - pre- and post-command callbacks
 - required rest args
 - Date type
+- opt groups for help output
