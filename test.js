@@ -82,6 +82,21 @@ var cfg = {
                 return cmd;
             }
         },
+        aliasedOpts: {
+            options: {
+                firstOpt: {
+                    type: String,
+                    alias: 'firstAlias' // not array
+                },
+                stringAlias: 'firstOpt', // string instead of object
+                secondOpt: {
+                    alias: [ 'secondAlias', 'thirdAlias' ] // in array
+                }
+            },
+            run: function(cmd) {
+                return cmd;
+            }
+        },
         paramCaseArgs: {
             arguments: '<foo-bar> [baz-quux]',
             run: function(cmd) {
@@ -217,6 +232,7 @@ test('unknown options', function(t) {
 
 test('camelCaseOpts', function(t) {
     commandable([ 'camel-case-opts', '--foo-bar', 'opt1', '--baz-quux', 'opt2' ], cfg).then(function(cmd) {
+        console.log(cmd);
         t.equal(cmd.opts.fooBar, 'opt1');
         t.equal(cmd.opts.bazQuux, 'opt2');
         t.end();
@@ -227,6 +243,24 @@ test('defaultOpts', function(t) {
     commandable([ 'default-opts', '--foo', 'notDefaultFoo' ], cfg).then(function(cmd) {
         t.equal(cmd.opts.foo, 'notDefaultFoo');
         t.equal(cmd.opts.bar, 'defaultBar');
+        t.end();
+    });
+});
+
+test('aliasedOpts', function(t) {
+    commandable([ 'aliased-opts', '--first-opt', 'foo', '--secondOpt', 'bar' ], cfg).then(function(cmd) {
+        t.equal(cmd.opts.firstOpt, 'foo');
+        t.equal(cmd.opts['first-opt'], 'foo');
+        t.equal(cmd.opts.firstAlias, 'foo');
+        t.equal(cmd.opts['first-alias'], 'foo');
+        t.equal(cmd.opts.stringAlias, 'foo');
+        t.equal(cmd.opts['string-alias'], 'foo');
+        t.equal(cmd.opts.secondOpt, 'bar');
+        t.equal(cmd.opts['second-opt'], 'bar');
+        t.equal(cmd.opts.secondAlias, 'bar');
+        t.equal(cmd.opts['second-alias'], 'bar');
+        t.equal(cmd.opts.thirdAlias, 'bar');
+        t.equal(cmd.opts['third-alias'], 'bar');
         t.end();
     });
 });
@@ -314,6 +348,27 @@ test('normalize options with dashes', function(t) {
     t.equal(Object.keys(normal.options).length, 2);
     t.equal(normal.options.boolOpt.type, Boolean);
     t.equal(normal.options.strOpt.type, String);
+
+    t.end();
+});
+
+test('normalize aliased options', function(t) {
+    var normal = commandable.normalize({
+        options: {
+            firstOpt: {
+                type: String,
+                alias: 'firstAlias' // not array
+            },
+            stringAlias: 'firstOpt', // string instead of object
+            secondOpt: {
+                alias: [ 'secondAlias', 'thirdAlias' ] // in array
+            }
+        }
+    });
+
+    t.equal(Object.keys(normal.options).length, 2);
+    t.equal(normal.options.firstOpt.alias.length, 5);
+    t.equal(normal.options.secondOpt.alias.length, 5);
 
     t.end();
 });

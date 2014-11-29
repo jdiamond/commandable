@@ -158,6 +158,46 @@ function normalize(cfg) {
         cfg.options[changeCase.camelCase(key)] = opts[key];
     });
 
+    Object.keys(cfg.options).forEach(function(key) {
+        var opt = cfg.options[key];
+
+        if (!opt || typeof opt === 'string') {
+            return;
+        } else if (!opt.alias) {
+            opt.alias = [];
+        } else if (typeof opt.alias === 'string') {
+            opt.alias = [ opt.alias ];
+        }
+    });
+
+    Object.keys(cfg.options).forEach(function(key) {
+        if (typeof cfg.options[key] === 'string') {
+            var opt = cfg.options[changeCase.camelCase(cfg.options[key])];
+
+            if (opt) {
+                opt.alias.push(key);
+            }
+
+            delete cfg.options[key];
+        }
+    });
+
+    Object.keys(cfg.options).forEach(function(key) {
+        var opt = cfg.options[key];
+
+        var aliases = {};
+
+        aliases[changeCase.camelCase(key)] = true;
+        aliases[changeCase.paramCase(key)] = true;
+
+        opt.alias.forEach(function(alias) {
+            aliases[changeCase.camelCase(alias)] = true;
+            aliases[changeCase.paramCase(alias)] = true;
+        });
+
+        opt.alias = _(aliases).omit(key).keys().value();
+    });
+
     var cmds = _(cfg.commands || {})
         .mapValues(function(sub, name) {
             sub = normalize(sub);
@@ -197,29 +237,34 @@ function parse(argv, cfg) {
     var mergedOptions = (function mergeOptions(cfg, options) {
         options = _.extend(options, cfg.options);
         return cfg.sup ? mergeOptions(cfg.sup, options) : options;
-    })(cfg, { h: 'help', help: { type: Boolean } });
+    })(cfg, { help: { type: Boolean, alias: [ 'h' ] } });
 
     cfg.alias = cfg.alias || {};
 
     Object.keys(mergedOptions).forEach(function(key) {
-        var paramCase = changeCase.paramCase(key);
-        var camelCase = _.isString(mergedOptions[key]) ? changeCase.camelCase(mergedOptions[key]) : key;
+        var aliases = [ key ].concat(mergedOptions[key].alias || []);
 
-        if (paramCase !== camelCase) {
-            cfg.alias[paramCase] = camelCase;
-        }
+        aliases.forEach(function(alias) {
+            var camelCase = changeCase.camelCase(alias);
+            var paramCase = changeCase.paramCase(alias);
+
+            if (paramCase !== camelCase) {
+                cfg.alias[paramCase] = key;
+            }
+        });
     });
 
     cfg.boolean = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         // only include boolean options
         return type === Boolean;
-    }).pluck(0).map(changeCase.paramCase).value();
+    }).pluck(0).value();
 
     cfg.string = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
-        return type !== Boolean && type !== Number;
-    }).pluck(0).map(changeCase.paramCase).value();
+        // exclude aliases, booleans, and numbers
+        return typeof type !== 'string' && type !== Boolean && type !== Number;
+    }).pluck(0).value();
 
     cfg.default = cfg.default || {};
 
@@ -231,10 +276,10 @@ function parse(argv, cfg) {
 
     var unknown;
 
-    if (!_.isEmpty(_.omit(mergedOptions, [ 'h', 'help' ]))) {
+    if (!_.isEmpty(_.omit(mergedOptions, [ 'help' ]))) {
         cfg.unknown = function(name) {
             // arguments also get passed to unknown
-            if (name.charAt(0) === '-') {
+            if (name.charAt(0) === '-' && name.length > 1) {
                 if (!unknown) {
                     var camelCase = changeCase.camelCase(name.replace(/^-+/, ''));
 
@@ -256,16 +301,21 @@ function parse(argv, cfg) {
         };
     }
 
-    var renamed = {};
-
     Object.keys(parsed).forEach(function(key) {
         if (key !== '_') {
-            renamed[changeCase.camelCase(key)] = parsed[key];
+            parsed[changeCase.camelCase(key)] =
+            parsed[changeCase.paramCase(key)] = parsed[key];
+
+            var opt = mergedOptions[changeCase.camelCase(key)];
+
+            if (opt) {
+                opt.alias.forEach(function(alias) {
+                    parsed[changeCase.camelCase(alias)] =
+                    parsed[changeCase.paramCase(alias)] = parsed[key];
+                });
+            }
         }
     });
-
-    renamed._ = parsed._;
-    parsed = renamed;
 
     return parsed;
 }
