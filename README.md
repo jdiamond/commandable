@@ -7,8 +7,9 @@ A minimal command-line interface framework powered by
 
 - Commands, sub-commands, sub-sub-commands, etc
 - Options are scoped to their commands
-- Control option parsing with standard minimist options
+- Return promises from commands to defer exit
 - Automatic help output if you describe it
+- Control option parsing with standard minimist options
 
 ## Install
 
@@ -22,20 +23,50 @@ npm i -S commandable
 var commandable = require('commandable');
 
 commandable({
+    init: function(cmd) {
+        // always invoked before any sub-commands
+    },
     commands: {
-        foo: function(cmd) {},
+        foo: function(cmd) {
+            // terse style for quick-and-dirty commands
+            // no options or arguments
+            // invoked when argv is `node script.js foo`
+        },
         bar: {
             help: 'do bar',
-            options: {},
-            arguments: '',
-            run: function(cmd) {},
+            options: {
+                booleanOpt: Boolean
+                numberOpt: Number
+                stringOpt: String
+            },
+            arguments: '<required> [optional]',
+            init: function(cmd) {
+                // invoked after super `init` and before `run` or any sub-commands
+            },
+            run: function(cmd) {
+                // invoked when argv is `node script.js bar`
+                // options will be in `cmd.opts`
+                // arguments will be in `cmd.args`
+            },
             commands: {
-                baz: function(cmd) {},
-                quux: {
-                    help: '',
-                    options: {},
-                    arguments: [],
-                    run: function(cmd) {}
+                baz: {
+                    help: 'do baz',
+                    options: {
+                        anotherOpt: {
+                            type: String,
+                            help: 'this is the help text',
+                            default: 'this is the default value'
+                        }
+                    },
+                    arguments: [
+                        { name: 'requiredArg', required: true },
+                        { name: 'optionalArg', required: false }
+                    ],
+                    run: function(cmd) {
+                        // invoked when argv is `node script.js bar baz`
+                        // options will be in `cmd.opts`
+                        // arguments will be in `cmd.args`
+                    }
                 }
             }
         }
