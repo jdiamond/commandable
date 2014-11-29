@@ -2,9 +2,10 @@
 
 var path = require('path');
 
-var Promise  = require('bluebird');
-var _        = require('lodash');
-var minimist = require('minimist');
+var Promise    = require('bluebird');
+var changeCase = require('change-case');
+var _          = require('lodash');
+var minimist   = require('minimist');
 
 var help = require('./help');
 
@@ -40,6 +41,10 @@ function run(argv, cfg, sup) {
             return resolve();
         }
 
+        if (parsed.help || parsed.h) {
+            return help(cfg);
+        }
+
         var proto = sup && sup.opts || Object.prototype;
 
         var cmd = {
@@ -50,17 +55,19 @@ function run(argv, cfg, sup) {
             rest: parsed._
         };
 
-        if (parsed.help || parsed.h) {
-            help(cfg);
-        } else if (cfg.commands && parsed._.length && parsed._[0] in cfg.commands) {
-            var sub = cfg.commands[parsed._[0]];
-            sub.log = cfg.log;
-            sub.error = cfg.error;
-            resolve(run(parsed._.slice(1), sub, cmd));
-        } else {
+        if (parsed._.length) {
+            var camelCaseCommandName = changeCase.camelCase(parsed._[0]);
+
+            if (cfg.commands && camelCaseCommandName in cfg.commands) {
+                var sub = cfg.commands[camelCaseCommandName];
+                sub.log = cfg.log;
+                sub.error = cfg.error;
+                return resolve(run(parsed._.slice(1), sub, cmd));
+            }
+
             if (!_.isEmpty(cfg.commands) && parsed._.length) {
                 var parents = (function sup(cfg) {
-                    return cfg.name ? sup(cfg.sup) + ' ' + cfg.name : '';
+                    return cfg.name ? sup(cfg.sup) + ' ' + changeCase.paramCase(cfg.name) : '';
                 })(cfg);
 
                 error('Unknown command: %s', (parents + ' ' + parsed._[0]).trim());
@@ -68,48 +75,48 @@ function run(argv, cfg, sup) {
                 help(cfg, error);
                 return resolve();
             }
+        }
 
-            var missing = findMissing(cmd);
+        var missing = findMissing(cmd);
 
-            if (missing) {
-                error('Missing argument: <%s>', missing);
-                error();
-                help(cfg, error);
-                return resolve();
-            }
+        if (missing) {
+            error('Missing argument: <%s>', changeCase.paramCase(missing));
+            error();
+            help(cfg, error);
+            return resolve();
+        }
 
-            if (cfg.callback || cfg.run) {
-                var inits = [];
+        if (cfg.callback || cfg.run) {
+            var inits = [];
 
-                (function init(cfg) {
-                    if (cfg.sup) {
-                        init(cfg.sup);
-                    }
-
-                    if (cfg.init) {
-                        inits.push(function() {
-                            return cfg.init(cmd);
-                        });
-                    }
-                })(cfg);
-
-                if (cfg.callback) {
-                    cfg.callback(cmd, function(err, result) {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(result);
-                        }
-                    });
-                } else if (cfg.run) {
-                    resolve(Promise
-                        .each(inits, function(init) { return init(); })
-                        .then(function() { return cfg.run(cmd); })
-                    );
+            (function init(cfg) {
+                if (cfg.sup) {
+                    init(cfg.sup);
                 }
-            } else {
-                help(cfg);
+
+                if (cfg.init) {
+                    inits.push(function() {
+                        return cfg.init(cmd);
+                    });
+                }
+            })(cfg);
+
+            if (cfg.callback) {
+                cfg.callback(cmd, function(err, result) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            } else if (cfg.run) {
+                resolve(Promise
+                    .each(inits, function(init) { return init(); })
+                    .then(function() { return cfg.run(cmd); })
+                );
             }
+        } else {
+            help(cfg);
         }
     });
 }
@@ -123,7 +130,7 @@ function normalize(cfg) {
 
     cfg.arguments =
         typeof cfg.arguments === 'string'
-        ? _.map(cfg.arguments.split(' '), function(arg) {
+        ? _.map(parseArgs(cfg.arguments), function(arg) {
             return {
                 name: arg.slice(1, -1),
                 type: String,
@@ -133,7 +140,11 @@ function normalize(cfg) {
         : cfg.arguments || []
     ;
 
-    cfg.options = _.mapValues(cfg.options || {}, function(val, key) {
+    cfg.arguments.forEach(function(arg) {
+        arg.name = changeCase.camelCase(arg.name);
+    });
+
+    var opts = _.mapValues(cfg.options || {}, function(val, key) {
         if (typeof val === 'function') {
             return { type: val };
         } else {
@@ -141,7 +152,13 @@ function normalize(cfg) {
         }
     });
 
-    cfg.commands = _(cfg.commands || {})
+    cfg.options = {};
+
+    Object.keys(opts).forEach(function(key) {
+        cfg.options[changeCase.camelCase(key)] = opts[key];
+    });
+
+    var cmds = _(cfg.commands || {})
         .mapValues(function(sub, name) {
             sub = normalize(sub);
 
@@ -153,7 +170,25 @@ function normalize(cfg) {
         .value()
     ;
 
+    cfg.commands = {};
+
+    Object.keys(cmds).forEach(function(key) {
+        cfg.commands[changeCase.camelCase(key)] = cmds[key];
+    });
+
     return cfg;
+
+    function parseArgs(args) {
+        var re = /((\<.+?\>)|(\[.+?\]))/g;
+        var match;
+        var results = [];
+
+        while ((match = re.exec(args))) {
+            results.push(match[1]);
+        }
+
+        return results;
+    }
 }
 
 function parse(argv, cfg) {
@@ -164,19 +199,27 @@ function parse(argv, cfg) {
         return cfg.sup ? mergeOptions(cfg.sup, options) : options;
     })(cfg, { h: 'help', help: { type: Boolean } });
 
-    cfg.alias = _.extend(cfg.alias || {}, _(mergedOptions).pick(_.isString).value());
+    cfg.alias = cfg.alias || {};
+
+    Object.keys(mergedOptions).forEach(function(key) {
+        var paramCase = changeCase.paramCase(key);
+        var camelCase = _.isString(mergedOptions[key]) ? changeCase.camelCase(mergedOptions[key]) : key;
+
+        if (paramCase !== camelCase) {
+            cfg.alias[paramCase] = camelCase;
+        }
+    });
 
     cfg.boolean = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         // only include boolean options
         return type === Boolean;
-    }).pluck(0).value();
+    }).pluck(0).map(changeCase.paramCase).value();
 
     cfg.string = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
-        // remove boolean options and aliases
-        return type !== Boolean && typeof type !== 'string';
-    }).pluck(0).value();
+        return type !== Boolean && type !== Number;
+    }).pluck(0).map(changeCase.paramCase).value();
 
     var unknown;
 
@@ -185,10 +228,14 @@ function parse(argv, cfg) {
             // arguments also get passed to unknown
             if (name.charAt(0) === '-') {
                 if (!unknown) {
-                    unknown = name;
-                }
+                    var camelCase = changeCase.camelCase(name.replace(/^-+/, ''));
 
-                return false;
+                    if (!cfg.options[camelCase]) {
+                        unknown = name;
+
+                        return false;
+                    }
+                }
             }
         };
     }
@@ -201,15 +248,16 @@ function parse(argv, cfg) {
         };
     }
 
-    // convert strings to numbers
-    _(mergedOptions).pairs().filter(function(pair) {
-        var type = pair[1] && pair[1].type || pair[1];
-        return type === Number;
-    }).pluck(0).forEach(function(num) {
-        if (parsed[num]) {
-            parsed[num] = Number(parsed[num]);
+    var renamed = {};
+
+    Object.keys(parsed).forEach(function(key) {
+        if (key !== '_') {
+            renamed[changeCase.camelCase(key)] = parsed[key];
         }
     });
+
+    renamed._ = parsed._;
+    parsed = renamed;
 
     return parsed;
 }
@@ -217,7 +265,7 @@ function parse(argv, cfg) {
 function collectArgs(args, cfg) {
     return _(cfg.arguments)
         .map(function(arg, i) {
-            return [ arg.name || i, args[i] ];
+            return [ changeCase.camelCase(arg.name), args[i] ];
         })
         .zipObject()
         .value()

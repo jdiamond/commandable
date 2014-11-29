@@ -1,6 +1,8 @@
 'use strict';
 
 var path = require('path');
+
+var changeCase = require('change-case');
 var columnify = require('columnify');
 var _ = require('lodash');
 
@@ -22,7 +24,7 @@ function help(cfg, log) {
 
 function getUsage(cfg, options, commands) {
     var usage = (function sup(cfg) {
-        return cfg.name ? sup(cfg.sup) + ' ' + cfg.name : '';
+        return cfg.name ? sup(cfg.sup) + ' ' + changeCase.paramCase(cfg.name) : '';
     })(cfg);
 
     if (options.length) {
@@ -32,8 +34,8 @@ function getUsage(cfg, options, commands) {
     if (cfg.arguments && cfg.arguments.length) {
         usage += ' ' + _(cfg.arguments).map(function(arg) {
             return arg.required
-                ? '<' + arg.name + '>'
-                : '[' + arg.name + ']'
+                ? '<' + changeCase.paramCase(arg.name) + '>'
+                : '[' + changeCase.paramCase(arg.name) + ']'
             ;
         }).value().join(' ');
     }
@@ -86,7 +88,13 @@ function getOptions(cfg) {
     ;
 
     function joinNames(name) {
-        var names = (aliases[name] || []).concat([ name ]);
+        var names = (aliases[name] || []);
+
+        var paramCase = changeCase.paramCase(name);
+
+        if (names.indexOf(paramCase) === -1) {
+            names.push(paramCase);
+        }
 
         var opts = _.groupBy(names, function(name) {
             return name.length === 1 ? 'short' : 'long';
@@ -112,7 +120,7 @@ function getCommands(cfg) {
         })
         .map(function(pair) {
             return {
-                name: pair[0],
+                name: changeCase.paramCase(pair[0]),
                 help: pair[1].help
             };
         })

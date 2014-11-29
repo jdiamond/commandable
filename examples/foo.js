@@ -1,27 +1,27 @@
 #!/usr/bin/env node
 
 require('../commandable')({
-    run: function(opts) {
-        inspect(opts);
+    run: function(cmd) {
+        inspect(cmd);
     },
     commands: {
-        foo: function(opts) {
+        foo: function(cmd) {
             console.log('foo');
-            inspect(opts);
+            inspect(cmd);
         },
         bar: {
-            run: function(opts) {
+            run: function(cmd) {
                 console.log('bar');
-                inspect(opts);
+                inspect(cmd);
             },
             commands: {
-                baz: function(opts) {
+                baz: function(cmd) {
                     console.log('baz');
-                    inspect(opts);
+                    inspect(cmd);
                 },
-                quux: function(opts) {
+                quux: function(cmd) {
                     console.log('quux');
-                    inspect(opts);
+                    inspect(cmd);
                 }
             }
         }

@@ -99,6 +99,44 @@ require('../commandable')({
                             cmd.args.cluster
                         );
                     }
+                },
+                shell: {
+                    help: 'ssh into node',
+                    options: {
+                        identityFile: { type: String, help: 'path to private SSH key' },
+                        i: 'identityFile'
+                    },
+                    arguments: '<name>',
+                    run: function(cmd) {
+                        var ssh = 'ssh';
+
+                        if (cmd.opts.identityFile) {
+                            ssh += ' -i ' + cmd.opts.identityFile;
+                        }
+
+                        ssh += ' root@' + cmd.args.name;
+
+                        console.log(ssh);
+                    }
+                },
+                putFiles: {
+                    help: 'copy files to node',
+                    options: {
+                        identityFile: { type: String, help: 'path to private SSH key' },
+                        i: 'identityFile'
+                    },
+                    arguments: '<name> <local-path> <remote-path>',
+                    run: function(cmd) {
+                        var scp = 'scp';
+
+                        if (cmd.opts.identityFile) {
+                            scp += ' -i ' + cmd.opts.identityFile;
+                        }
+
+                        scp += ' ' + cmd.args.localPath + ' root@' + cmd.args.name + ':' + cmd.args.remotePath;
+
+                        console.log(scp);
+                    }
                 }
             }
         }

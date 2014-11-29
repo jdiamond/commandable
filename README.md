@@ -77,7 +77,6 @@ The `cmd` argument looks like this:
 - catch errors
 - env vars
 - notes
-- opts likeThis in code, like-this in cli (or maybe both)
 - default in opts
 - pre- and post-command callbacks
 - required rest args

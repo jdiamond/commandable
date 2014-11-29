@@ -7,6 +7,8 @@ var test = require('tape');
 
 var commandable = require('./commandable');
 
+Promise.longStackTraces();
+
 var errorOutput = '';
 
 var cfg = {
@@ -52,6 +54,21 @@ var cfg = {
                 num: Number,
                 str: String
             },
+            run: function(cmd) {
+                return cmd;
+            }
+        },
+        camelCaseOpts: {
+            options: {
+                fooBar: String,
+                bazQuux: String
+            },
+            run: function(cmd) {
+                return cmd;
+            }
+        },
+        paramCaseArgs: {
+            arguments: '<foo-bar> [baz-quux]',
             run: function(cmd) {
                 return cmd;
             }
@@ -183,6 +200,24 @@ test('unknown options', function(t) {
     ;
 });
 
+test('camelCaseOpts', function(t) {
+    commandable([ 'camel-case-opts', '--foo-bar', 'opt1', '--baz-quux', 'opt2' ], cfg).then(function(cmd) {
+        t.equal(cmd.opts.fooBar, 'opt1');
+        t.equal(cmd.opts.bazQuux, 'opt2');
+        t.end();
+    });
+});
+
+test('paramCaseArgs', function(t) {
+    commandable([ 'param-case-args', 'arg1', 'arg2', 'arg3', 'arg4' ], cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'paramCaseArgs');
+        t.equal(Object.keys(cmd.args).length, 2);
+        t.equal(cmd.args.fooBar, 'arg1');
+        t.equal(cmd.args.bazQuux, 'arg2');
+        t.end();
+    });
+});
+
 test('unknown command', function(t) {
     errorOutput = '';
 
@@ -206,6 +241,30 @@ test('normalize arguments', function(t) {
     t.end();
 });
 
+test('normalize arguments with dashes', function(t) {
+    var normal = commandable.normalize({
+        arguments: '<required-arg> [optional-arg]'
+    });
+
+    t.equal(normal.arguments.length, 2);
+    t.equal(normal.arguments[0].name, 'requiredArg');
+    t.equal(normal.arguments[1].name, 'optionalArg');
+
+    t.end();
+});
+
+test('normalize arguments with spaces', function(t) {
+    var normal = commandable.normalize({
+        arguments: '<required arg> [optional arg]'
+    });
+
+    t.equal(normal.arguments.length, 2);
+    t.equal(normal.arguments[0].name, 'requiredArg');
+    t.equal(normal.arguments[1].name, 'optionalArg');
+
+    t.end();
+});
+
 test('normalize options', function(t) {
     var normal = commandable.normalize({
         options: {
@@ -217,6 +276,21 @@ test('normalize options', function(t) {
     t.equal(Object.keys(normal.options).length, 2);
     t.equal(normal.options.bool.type, Boolean);
     t.equal(normal.options.str.type, String);
+
+    t.end();
+});
+
+test('normalize options with dashes', function(t) {
+    var normal = commandable.normalize({
+        options: {
+            'bool-opt': Boolean,
+            'str-opt': String
+        }
+    });
+
+    t.equal(Object.keys(normal.options).length, 2);
+    t.equal(normal.options.boolOpt.type, Boolean);
+    t.equal(normal.options.strOpt.type, String);
 
     t.end();
 });
