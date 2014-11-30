@@ -4,6 +4,7 @@
     },
     "rules": {
         "quotes": "single",
+        "no-multi-spaces": 0,
         "no-space-before-semi": 0,
         "no-use-before-define": 0,
         "no-unused-vars": 0
