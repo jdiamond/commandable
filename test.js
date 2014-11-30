@@ -392,6 +392,28 @@ test('arguments can be param-case in spec and camelCase in code', function(t) {
     });
 });
 
+test('arguments get parsed into argv, args, and rest', function(t) {
+    var args = [ 'parse-args', 'arg1', 'arg2', 'arg3', 'arg4' ];
+    var cfg = {
+        commands: {
+            parseArgs: {
+                arguments: '<foo-bar> [baz-quux]',
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'parseArgs');
+        t.deepEqual(cmd.argv, [ 'arg1', 'arg2', 'arg3', 'arg4' ]);
+        t.deepEqual(cmd.args, { fooBar: 'arg1', bazQuux: 'arg2' });
+        t.deepEqual(cmd.rest, [ 'arg3', 'arg4' ]);
+        t.end();
+    });
+});
+
 test('unknown commands result in no command running and an error logged', function(t) {
     var errorLogged = false;
     var exitCode = 0;

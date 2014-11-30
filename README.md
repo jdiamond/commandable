@@ -103,11 +103,12 @@ The `cmd` argument looks like this:
 ```
 {
     name: 'command',
-    cfg:  { /* command config       */ },
-    sup:  { /* super command config */ },
     opts: { /* parsed options       */ },
-    args: { /* parsed arguments     */ },
-    rest: [ /* remaining arguments  */ ]
+    argv: [ /* positional arguments */ ],
+    args: { /* named arguments      */ },
+    rest: [ /* remaining arguments  */ ],
+    cfg:  { /* command config       */ },
+    sup:  { /* super command config */ }
 }
 ```
 

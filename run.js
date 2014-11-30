@@ -4,14 +4,14 @@ var Promise    = require('bluebird');
 var changeCase = require('change-case');
 var _          = require('lodash');
 
-var help = require('./help');
-var normalize = require('./normalize');
-var parse = require('./parse');
+var help       = require('./help');
+var normalize  = require('./normalize');
+var parse      = require('./parse');
 
 module.exports = run;
 
 function run(argv, cfg, sup) {
-    normalize(cfg);
+    cfg = normalize(cfg);
 
     var error = cfg.error || console.error;
     var exit = cfg.exit || process.exit;
@@ -34,12 +34,15 @@ function run(argv, cfg, sup) {
 
         var proto = sup && sup.opts || Object.prototype;
 
+        var parsedArgs = parseArgs(parsed._, cfg);
+
         var cmd = {
             sup: sup,
             cfg: cfg,
             opts: _.extend(Object.create(proto), _.omit(parsed, '_')),
-            args: collectNamedArgs(parsed._, cfg),
-            rest: parsed._
+            argv: parsed._,
+            args: parsedArgs.named,
+            rest: parsedArgs.rest
         };
 
         if (parsed._.length) {
@@ -61,7 +64,7 @@ function run(argv, cfg, sup) {
 
                 var sub = cfg.commands[commandName];
 
-                // move some of the super config down to the child config
+                // move some of the super command config down to the sub command config
                 sub.log = cfg.log;
                 sub.error = cfg.error;
                 sub.exit = cfg.exit;
@@ -116,14 +119,24 @@ function run(argv, cfg, sup) {
             })
         ;
 
-        function collectNamedArgs(args, cfg) {
-            return _(cfg.arguments)
+        function parseArgs(args, cfg) {
+            var count = 0;
+            var named = _(cfg.arguments)
                 .map(function(arg, i) {
-                    return [ changeCase.camelCase(arg.name), args[i] ];
+                    if (i < args.length) {
+                        count++;
+                        return [ changeCase.camelCase(arg.name), args[i] ];
+                    }
                 })
+                .filter()
                 .zipObject()
                 .value()
             ;
+
+            return {
+                named: named,
+                rest: args.slice(count)
+            };
         }
 
         function findFirstMissingArg(cmd) {
@@ -134,6 +147,11 @@ function run(argv, cfg, sup) {
     }).catch(function(err) {
         var message = err && err.message || err;
         error('Error: ' + message);
+
+        if (process.env.DEBUG && err.stack) {
+            error(err.stack);
+        }
+
         return exit(1);
     });
 }
