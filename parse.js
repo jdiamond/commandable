@@ -23,7 +23,11 @@ function parse(argv, cfg) {
             var camelCase = changeCase.camelCase(alias);
             var paramCase = changeCase.paramCase(alias);
 
-            if (paramCase !== camelCase) {
+            if (camelCase !== key) {
+                cfg.alias[camelCase] = key;
+            }
+
+            if (paramCase !== key) {
                 cfg.alias[paramCase] = key;
             }
         });
