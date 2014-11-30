@@ -6,6 +6,7 @@ var Promise = require('bluebird');
 var test = require('tape');
 
 var commandable = require('./commandable');
+var normalize = require('./normalize');
 
 Promise.longStackTraces();
 
@@ -410,7 +411,7 @@ test('unknown commands result in no command running and an error logged', functi
 });
 
 test('argument specs get normalized as an array of objects', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         arguments: '<required> [optional]'
     });
 
@@ -422,7 +423,7 @@ test('argument specs get normalized as an array of objects', function(t) {
 });
 
 test('argument specs with dashes get normalized as camelCase', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         arguments: '<required-arg> [optional-arg]'
     });
 
@@ -434,7 +435,7 @@ test('argument specs with dashes get normalized as camelCase', function(t) {
 });
 
 test('arguments specs with spaces get normalized as camelCase', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         arguments: '<required arg> [optional arg]'
     });
 
@@ -446,7 +447,7 @@ test('arguments specs with spaces get normalized as camelCase', function(t) {
 });
 
 test('options specified as functions use those as their types', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         options: {
             bool: Boolean,
             str: String
@@ -461,7 +462,7 @@ test('options specified as functions use those as their types', function(t) {
 });
 
 test('options with param-case names get normalized as camelCase', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         options: {
             'bool-opt': Boolean,
             'str-opt': String
@@ -476,7 +477,7 @@ test('options with param-case names get normalized as camelCase', function(t) {
 });
 
 test('option aliases get normalized as an array including their param-case variants', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         options: {
             firstOpt: {
                 type: String,
@@ -501,7 +502,7 @@ test('option aliases get normalized as an array including their param-case varia
 });
 
 test('commands specified as functions get normalized as objects', function(t) {
-    var normal = commandable.normalize({
+    var normal = normalize({
         commands: {
             fn: function(cmd) {},
             obj: { run: function(cmd) {} },
@@ -529,7 +530,7 @@ test('commands specified as functions get normalized as objects', function(t) {
 });
 
 test('configs specified as a function get normalized as an object', function(t) {
-    var normal = commandable.normalize(function(cmd) {});
+    var normal = normalize(function(cmd) {});
 
     t.equal(typeof normal, 'object');
     t.equal(typeof normal.run, 'function');
