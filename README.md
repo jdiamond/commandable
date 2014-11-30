@@ -114,15 +114,21 @@ The `cmd` argument looks like this:
 
 ## TODO
 
+Additional features:
+
 - bash completions
-- env vars
-- notes
+- env vars (with custom function/object to lookup or process.env)
 - pre- and post-command callbacks
 - required rest args
 - Date type
-- opt groups for help output
 - default values for optional arguments
-- help text for arguments and output in help
-- don't output help and exit when 'h' or 'help' option is configured
 - command aliases
 - validation functions for options and arguments
+
+Related to help output:
+
+- notes (as array of strings or path to file?)
+- placeholders in options (--foo=<bar>)
+- opt groups for help output
+- help text for arguments and output in help
+- don't output help and exit when 'h' or 'help' option is configured
