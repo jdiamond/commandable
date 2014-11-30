@@ -7,7 +7,7 @@ A minimal command-line interface framework powered by
 
 - Commands, sub-commands, sub-sub-commands, etc
 - Options are scoped to their commands
-- Return promises from commands to defer exit
+- Commands can return promises or use callbacks to defer exit
 - Automatic help output if you describe it
 - Control option parsing with standard minimist options
 
@@ -71,21 +71,26 @@ commandable({
             }
         }
     }
+}).then(function(result) {
+    // invoked after command completes
 });
 ```
 
-If you want callbacks, replace `run` with `callback`, make sure you declare the
-callback argument, and call it like `cb(err)` or `cb(null, result)`:
+If you prefer callbacks, declare a second callback argument, and call it like
+`cb(err)` or `cb(null, result)`:
 
 ```
 commandable({
-    callback: function(cmd, cb) {
+    run: function(cmd, cb) {
         // cb(err) or cb(null, result);
     },
     commands: {
-        foo: function(cmd, cb) {}
-        // etc
+        foo: function(cmd, cb) {
+            // cb(err) or cb(null, result);
+        }
     }
+}, function(err, result) {
+    // invoked after command completes
 });
 ```
 

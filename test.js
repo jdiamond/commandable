@@ -66,12 +66,12 @@ test('command objects normally have a run method', function(t) {
     });
 });
 
-test('command objects can have a callback method', function(t) {
+test('command objects with a run method that declares two arguments receives a callback function', function(t) {
     var args = [ '-a', 'b', 'cmd', '-c', 'd' ];
     var cfg = {
         commands: {
             cmd: {
-                callback: function(cmd, callback) {
+                run: function(cmd, callback) {
                     callback(null, cmd);
                 }
             }

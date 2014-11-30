@@ -32,14 +32,13 @@ function run(argv, cfg, sup) {
     var error = cfg.error || console.error;
     var exit = cfg.exit || process.exit;
 
-    return new Promise(function(resolve, reject) {
+    return Promise.try(function() {
         var parsed = parse(argv, cfg);
 
         if (parsed.unknown) {
             error('Unknown option: %s', parsed.unknown);
             error();
-            help(cfg, error);
-            return resolve();
+            return help(cfg, error);
         }
 
         if (parsed.help || parsed.h) {
@@ -64,7 +63,7 @@ function run(argv, cfg, sup) {
                 sub.log = cfg.log;
                 sub.error = cfg.error;
                 sub.exit = cfg.exit;
-                return resolve(run(parsed._.slice(1), sub, cmd));
+                return run(parsed._.slice(1), sub, cmd);
             }
 
             if (!_.isEmpty(cfg.commands) && parsed._.length) {
@@ -74,8 +73,8 @@ function run(argv, cfg, sup) {
 
                 error('Unknown command: %s', (parents + ' ' + parsed._[0]).trim());
                 error();
-                help(cfg, error);
-                return resolve();
+
+                return help(cfg, error);
             }
         }
 
@@ -84,42 +83,42 @@ function run(argv, cfg, sup) {
         if (missing) {
             error('Missing argument: <%s>', changeCase.paramCase(missing));
             error();
-            help(cfg, error);
-            return resolve();
+
+            return help(cfg, error);
         }
 
-        if (cfg.callback || cfg.run) {
-            var inits = [];
+        if (!cfg.run) {
+            return help(cfg);
+        }
 
-            (function init(cfg) {
-                if (cfg.sup) {
-                    init(cfg.sup);
-                }
+        var inits = [];
 
-                if (cfg.init) {
-                    inits.push(function() {
-                        return cfg.init(cmd);
-                    });
-                }
-            })(cfg);
+        (function init(cfg) {
+            if (cfg.sup) {
+                init(cfg.sup);
+            }
 
-            if (cfg.callback) {
-                cfg.callback(cmd, function(err, result) {
-                    if (err) {
-                        reject(err);
+            if (cfg.init) {
+                inits.push(function() {
+                    if (cfg.init.length === 2) {
+                        return Promise.promisify(cfg.init)(cmd);
                     } else {
-                        resolve(result);
+                        return cfg.init(cmd);
                     }
                 });
-            } else if (cfg.run) {
-                resolve(Promise
-                    .each(inits, function(init) { return init(); })
-                    .then(function() { return cfg.run(cmd); })
-                );
             }
-        } else {
-            help(cfg);
-        }
+        })(cfg);
+
+        return Promise
+            .each(inits, function(init) { return init(); })
+            .then(function() {
+                if (cfg.run.length === 2) {
+                    return Promise.promisify(cfg.run)(cmd);
+                } else {
+                    return cfg.run(cmd);
+                }
+            })
+        ;
 
         function collectArgs(args, cfg) {
             return _(cfg.arguments)
@@ -145,9 +144,7 @@ function run(argv, cfg, sup) {
 
 function normalize(cfg) {
     if (typeof cfg === 'function') {
-        var fn = cfg;
-        cfg = {};
-        cfg[fn.length === 2 ? 'callback' : 'run'] = fn;
+        cfg = { run: cfg };
     }
 
     cfg.arguments =
