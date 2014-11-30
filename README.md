@@ -117,7 +117,6 @@ The `cmd` argument looks like this:
 Additional features:
 
 - bash completions
-- env vars (with custom function/object to lookup or process.env)
 - pre- and post-command callbacks
 - required rest args
 - Date type

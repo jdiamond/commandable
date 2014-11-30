@@ -48,7 +48,9 @@ function parse(argv, cfg) {
     cfg.default = cfg.default || {};
 
     Object.keys(mergedOptions).forEach(function(key) {
-        if (mergedOptions[key].default) {
+        var opt = mergedOptions[key];
+
+        if (opt.default && !opt.env) {
             cfg.default[key] = mergedOptions[key].default;
         }
     });
@@ -79,6 +81,33 @@ function parse(argv, cfg) {
             unknown: unknown
         };
     }
+
+    var foundOpts = {};
+    var env = cfg.env || process.env;
+
+    Object.keys(parsed).forEach(function(key) {
+        foundOpts[changeCase.camelCase(key)] = true;
+    });
+
+    Object.keys(mergedOptions).forEach(function(key) {
+        if (!foundOpts[key]) {
+            var opt = mergedOptions[key];
+
+            if (opt.env) {
+                var val = typeof env === 'function' ? env(opt.env) : env[opt.env];
+
+                if (val) {
+                    parsed[key] = val;
+
+                    return;
+                }
+            }
+
+            if (opt.default) {
+                parsed[key] = opt.default;
+            }
+        }
+    });
 
     Object.keys(parsed).forEach(function(key) {
         if (key !== '_') {

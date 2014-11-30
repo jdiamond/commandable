@@ -105,8 +105,12 @@ require('../commandable')({
                 shell: {
                     help: 'ssh into node',
                     options: {
-                        identityFile: { type: String, help: 'path to private SSH key' },
-                        i: 'identityFile'
+                        identityFile: {
+                            alias: 'i',
+                            type: String,
+                            help: 'path to private SSH key',
+                            env: 'DEVOPS_KEY'
+                        }
                     },
                     arguments: '<name>',
                     run: function(cmd) {
@@ -124,8 +128,12 @@ require('../commandable')({
                 putFiles: {
                     help: 'copy files to node',
                     options: {
-                        identityFile: { type: String, help: 'path to private SSH key' },
-                        i: 'identityFile'
+                        identityFile: {
+                            alias: 'i',
+                            type: String,
+                            help: 'path to private SSH key',
+                            env: 'DEVOPS_KEY'
+                        }
                     },
                     arguments: '<name> <local-path> <remote-path>',
                     run: function(cmd) {

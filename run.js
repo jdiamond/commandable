@@ -65,6 +65,7 @@ function run(argv, cfg, sup) {
                 var sub = cfg.commands[commandName];
 
                 // move some of the super command config down to the sub command config
+                sub.env = cfg.env;
                 sub.log = cfg.log;
                 sub.error = cfg.error;
                 sub.exit = cfg.exit;

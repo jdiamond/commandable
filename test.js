@@ -370,6 +370,91 @@ test('options can have aliases', function(t) {
     });
 });
 
+test('options can get default values from the environment', function(t) {
+    var args = [ 'my-cmd' ];
+    var cfg = {
+        commands: {
+            myCmd: {
+                options: {
+                    myOpt: {
+                        type: String,
+                        env: 'MY_VAR'
+                    }
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        },
+        env: {
+            MY_VAR: 'myVal'
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'myCmd');
+        t.equal(cmd.opts.myOpt, 'myVal');
+        t.end();
+    });
+});
+
+test('env can be a function', function(t) {
+    var args = [ 'my-cmd' ];
+    var cfg = {
+        commands: {
+            myCmd: {
+                options: {
+                    myOpt: {
+                        type: String,
+                        env: 'MY_VAR'
+                    }
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        },
+        env: function(key) {
+            return 'myDynamicVal';
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'myCmd');
+        t.equal(cmd.opts.myOpt, 'myDynamicVal');
+        t.end();
+    });
+});
+
+test('default values are used after the environment is checked', function(t) {
+    var args = [ 'my-cmd' ];
+    var cfg = {
+        commands: {
+            myCmd: {
+                options: {
+                    myOpt: {
+                        type: String,
+                        env: 'MY_VAR',
+                        default: 'myDefault'
+                    }
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        },
+        env: {
+            MY_VAR: undefined
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'myCmd');
+        t.equal(cmd.opts.myOpt, 'myDefault');
+        t.end();
+    });
+});
+
 test('arguments can be param-case in spec and camelCase in code', function(t) {
     var args = [ 'param-case-args', 'arg1', 'arg2', 'arg3', 'arg4' ];
     var cfg = {
