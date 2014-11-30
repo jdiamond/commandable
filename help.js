@@ -10,6 +10,7 @@ module.exports = help;
 
 function help(cfg, log) {
     var options = getOptions(cfg);
+    var args = getArguments(cfg);
     var commands = getCommands(cfg);
     var usage = getUsage(cfg, options, commands);
 
@@ -17,6 +18,7 @@ function help(cfg, log) {
 
     outputUsage(usage, log);
     outputOptions(options, log);
+    outputArguments(args, log);
     outputCommands(commands, log);
 
     log();
@@ -107,6 +109,21 @@ function getOptions(cfg) {
     }
 }
 
+function getArguments(cfg) {
+    return _(cfg.arguments)
+        .map(function(arg) {
+            if (arg.help) {
+                return {
+                    name: arg.name,
+                    help: arg.help
+                };
+            }
+        })
+        .filter()
+        .value()
+    ;
+}
+
 function getCommands(cfg) {
     var commands = cfg.commands || {};
 
@@ -144,6 +161,25 @@ function outputOptions(options, log) {
             columns: [ 'empty', 'names', 'help' ],
             config: {
                 names: {
+                    align: 'left'
+                }
+            }
+        }));
+    }
+}
+
+function outputArguments(args, log) {
+    if (args.length) {
+        log();
+        log('Arguments:');
+        log();
+
+        log(columnify(args, {
+            showHeaders: false,
+            columnSplitter: '   ',
+            columns: [ 'empty', 'name', 'help' ],
+            config: {
+                name: {
                     align: 'left'
                 }
             }

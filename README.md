@@ -130,5 +130,4 @@ Related to help output:
 - notes (as array of strings or path to file?)
 - placeholders in options (--foo=<bar>)
 - opt groups for help output
-- help text for arguments and output in help
 - don't output help and exit when 'h' or 'help' option is configured
