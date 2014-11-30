@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../commandable')({
+require('..')({
     run: function(cmd) {
         throw new Error('always fails');
     }

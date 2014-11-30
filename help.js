@@ -35,9 +35,15 @@ function getUsage(cfg, options, commands) {
 
     if (cfg.arguments && cfg.arguments.length) {
         usage += ' ' + _(cfg.arguments).map(function(arg) {
+            var name = changeCase.paramCase(arg.name);
+
+            if (arg.multi) {
+                name += '...';
+            }
+
             return arg.required
-                ? '<' + changeCase.paramCase(arg.name) + '>'
-                : '[' + changeCase.paramCase(arg.name) + ']'
+                ? '<' + name + '>'
+                : '[' + name + ']'
             ;
         }).value().join(' ');
     }

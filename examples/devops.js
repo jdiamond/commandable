@@ -2,7 +2,7 @@
 
 'use strict';
 
-require('../commandable')({
+require('..')({
     options: {
         c: 'config',
         config: {

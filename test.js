@@ -499,6 +499,26 @@ test('arguments get parsed into argv, args, and rest', function(t) {
     });
 });
 
+test('multi arguments get parsed into an array', function(t) {
+    var args = [ 'multi-args', 'arg1', 'arg2', 'arg3', 'arg4' ];
+    var cfg = {
+        commands: {
+            multiArgs: {
+                arguments: '<files...>',
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'multiArgs');
+        t.deepEqual(cmd.args.files, [ 'arg1', 'arg2', 'arg3', 'arg4' ]);
+        t.end();
+    });
+});
+
 test('unknown commands result in no command running and an error logged', function(t) {
     var errorLogged = false;
     var exitCode = 0;

@@ -14,9 +14,10 @@ function normalize(cfg) {
         typeof cfg.arguments === 'string'
         ? _.map(parseArgs(cfg.arguments), function(arg) {
             return {
-                name: arg.slice(1, -1),
+                name: arg.slice(1, -1).replace(/\.\.\.$/, ''),
                 type: String,
-                required: arg.charAt(0) === '<'
+                required: arg.charAt(0) === '<',
+                multi: arg.slice(-4, -1) === '...'
             };
         })
         : cfg.arguments || []

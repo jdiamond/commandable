@@ -117,12 +117,13 @@ The `cmd` argument looks like this:
 Additional features:
 
 - bash completions
-- pre- and post-command callbacks
-- required rest args
+- exit command callbacks
 - Date type
+- multi options
 - default values for optional arguments
 - command aliases
 - validation functions for options and arguments
+- argument types
 
 Related to help output:
 

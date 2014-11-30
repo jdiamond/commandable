@@ -77,7 +77,7 @@ function run(argv, cfg, sup) {
         var missing = findFirstMissingArg(cmd);
 
         if (missing) {
-            error('Missing argument: <%s>', changeCase.paramCase(missing));
+            error('Missing argument: %s', changeCase.paramCase(missing));
             error();
 
             help(cfg, error);
@@ -126,6 +126,11 @@ function run(argv, cfg, sup) {
                 .map(function(arg, i) {
                     if (i < args.length) {
                         count++;
+
+                        if (arg.multi) {
+                            return [ changeCase.camelCase(arg.name), args.slice(i) ];
+                        }
+
                         return [ changeCase.camelCase(arg.name), args[i] ];
                     }
                 })
