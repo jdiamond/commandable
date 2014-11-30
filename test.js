@@ -9,29 +9,29 @@ var commandable = require('./commandable');
 
 Promise.longStackTraces();
 
-test('fn', function(t) {
-    var args = [ '-a', 'b', 'fn', '-c', 'd' ];
+test('commands can accept any options by declaring none', function(t) {
+    var args = [ '-a', 'b', 'cmd', '-c', 'd' ];
     var cfg = {
         commands: {
-            fn: function(cmd) {
+            cmd: function(cmd) {
                 return cmd;
             }
         }
     };
 
     commandable(args, cfg).then(function(cmd) {
-        t.equal(cmd.cfg.name, 'fn');
+        t.equal(cmd.cfg.name, 'cmd');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
         t.end();
     });
 });
 
-test('fn2', function(t) {
-    var args = [ '-a', 'b', 'fn2', '-c', 'd' ];
+test('commands with two declared arguments get passed a callback', function(t) {
+    var args = [ '-a', 'b', 'cmd', '-c', 'd' ];
     var cfg = {
         commands: {
-            fn2: function(cmd, callback) {
+            cmd: function(cmd, callback) {
                 callback(null, cmd);
             }
         }
@@ -39,18 +39,18 @@ test('fn2', function(t) {
 
     commandable(args, cfg, function(err, cmd) {
         if (err) { return t.end(err); }
-        t.equal(cmd.cfg.name, 'fn2');
+        t.equal(cmd.cfg.name, 'cmd');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
         t.end();
     });
 });
 
-test('obj', function(t) {
-    var args = [ '-a', 'b', 'obj', '-c', 'd' ];
+test('command objects normally have a run method', function(t) {
+    var args = [ '-a', 'b', 'cmd', '-c', 'd' ];
     var cfg = {
         commands: {
-            obj: {
+            cmd: {
                 run: function(cmd) {
                     return cmd;
                 }
@@ -59,18 +59,18 @@ test('obj', function(t) {
     };
 
     commandable(args, cfg).then(function(cmd) {
-        t.equal(cmd.cfg.name, 'obj');
+        t.equal(cmd.cfg.name, 'cmd');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
         t.end();
     });
 });
 
-test('obj2', function(t) {
-    var args = [ '-a', 'b', 'obj2', '-c', 'd' ];
+test('command objects can have a callback method', function(t) {
+    var args = [ '-a', 'b', 'cmd', '-c', 'd' ];
     var cfg = {
         commands: {
-            obj2: {
+            cmd: {
                 callback: function(cmd, callback) {
                     callback(null, cmd);
                 }
@@ -80,23 +80,23 @@ test('obj2', function(t) {
 
     commandable(args, cfg, function(err, cmd) {
         if (err) { return t.end(err); }
-        t.equal(cmd.cfg.name, 'obj2');
+        t.equal(cmd.cfg.name, 'cmd');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
         t.end();
     });
 });
 
-test('sub', function(t) {
-    var args = [ '-a', 'b', 'sub', '-c', 'd' ];
+test('commands can have sub commands', function(t) {
+    var args = [ '-a', 'b', 'super', '-c', 'd', 'sub', '-e', 'f' ];
     var cfg = {
         commands: {
-            sub: {
+            super: {
                 run: function(cmd) {
                     return cmd;
                 },
                 commands: {
-                    sub2: function(cmd) {
+                    sub: function(cmd) {
                         return cmd;
                     }
                 }
@@ -108,37 +108,12 @@ test('sub', function(t) {
         t.equal(cmd.cfg.name, 'sub');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
-        t.end();
-    });
-});
-
-test('sub2', function(t) {
-    var args = [ '-a', 'b', 'sub', '-c', 'd', 'sub2', '-e', 'f' ];
-    var cfg = {
-        commands: {
-            sub: {
-                run: function(cmd) {
-                    return cmd;
-                },
-                commands: {
-                    sub2: function(cmd) {
-                        return cmd;
-                    }
-                }
-            }
-        }
-    };
-
-    commandable(args, cfg).then(function(cmd) {
-        t.equal(cmd.cfg.name, 'sub2');
-        t.equal(cmd.opts.a, 'b');
-        t.equal(cmd.opts.c, 'd');
         t.equal(cmd.opts.e, 'f');
         t.end();
     });
 });
 
-test('none', function(t) {
+test('commands aren\'t required', function(t) {
     var args = [ '-a', 'b', '-c', 'd' ];
     var cfg = {
         run: function(cmd) {
@@ -154,7 +129,7 @@ test('none', function(t) {
     });
 });
 
-test('callback', function(t) {
+test('main function accepts an optional callback argument', function(t) {
     var args = [ '-a', 'b', '-c', 'd' ];
     var cfg = {
         run: function(cmd) {
@@ -171,7 +146,7 @@ test('callback', function(t) {
     });
 });
 
-test('err', function(t) {
+test('promises returned from commands can be rejected', function(t) {
     var args = [ '-a', 'b', 'err', '-c', 'd' ];
     var cfg = {
         commands: {
@@ -187,7 +162,7 @@ test('err', function(t) {
     });
 });
 
-test('err2', function(t) {
+test('commands that use callbacks can call back with an error', function(t) {
     var args = [ '-a', 'b', 'err2', '-c', 'd' ];
     var cfg = {
         commands: {
@@ -203,23 +178,23 @@ test('err2', function(t) {
     });
 });
 
-test('throw', function(t) {
+test('commands that throw turn into rejected promises', function(t) {
     var args = [ '-a', 'b', 'throw', '-c', 'd' ];
     var cfg = {
         commands: {
             throw: function(cmd) {
-                throw new Error('throw');
+                throw new Error('thrown exception');
             }
         }
     };
 
     commandable(args, cfg).catch(function(err) {
-        t.equal(err.message, 'throw');
+        t.equal(err.message, 'thrown exception');
         t.end();
     });
 });
 
-test('known options', function(t) {
+test('boolean, number, and string options are supported', function(t) {
     var args = [ 'opt', '--bool', '--num', '123', '--str', 'abc' ];
     var cfg = {
         commands: {
@@ -245,16 +220,14 @@ test('known options', function(t) {
     });
 });
 
-test('unknown options', function(t) {
+test('unknown options result in no command running and an error logged', function(t) {
     var errorOutput = '';
     var args = [ 'opt', '--foo', 'bar' ];
     var cfg = {
         commands: {
             opt: {
                 options: {
-                    bool: Boolean,
-                    num: Number,
-                    str: String
+                    dummy: String // at least option is required
                 },
                 run: function(cmd) {
                     return cmd;
@@ -266,13 +239,14 @@ test('unknown options', function(t) {
         }
     };
 
-    commandable(args, cfg).then(function() {
+    commandable(args, cfg).then(function(cmd) {
+        t.ok(!cmd);
         t.ok(errorOutput);
         t.end();
     });
 });
 
-test('camelCaseOpts', function(t) {
+test('options can be camelCase in code and param-case in args', function(t) {
     var args = [ 'camel-case-opts', '--foo-bar', 'opt1', '--baz-quux', 'opt2' ];
     var cfg = {
         commands: {
@@ -289,14 +263,13 @@ test('camelCaseOpts', function(t) {
     };
 
     commandable(args, cfg).then(function(cmd) {
-        console.log(cmd);
         t.equal(cmd.opts.fooBar, 'opt1');
         t.equal(cmd.opts.bazQuux, 'opt2');
         t.end();
     });
 });
 
-test('defaultOpts', function(t) {
+test('options can have default values', function(t) {
     var args = [ 'default-opts', '--foo', 'notDefaultFoo' ];
     var cfg = {
         commands: {
@@ -325,7 +298,7 @@ test('defaultOpts', function(t) {
     });
 });
 
-test('aliasedOpts', function(t) {
+test('options can have aliases', function(t) {
     var args = [ 'aliased-opts', '--first-opt', 'foo', '--secondOpt', 'bar' ];
     var cfg = {
         commands: {
@@ -364,7 +337,7 @@ test('aliasedOpts', function(t) {
     });
 });
 
-test('paramCaseArgs', function(t) {
+test('arguments can be param-case in spec and camelCase in code', function(t) {
     var args = [ 'param-case-args', 'arg1', 'arg2', 'arg3', 'arg4' ];
     var cfg = {
         commands: {
@@ -386,7 +359,7 @@ test('paramCaseArgs', function(t) {
     });
 });
 
-test('unknown command', function(t) {
+test('unknown commands result in no command running and an error logged', function(t) {
     var errorOutput = '';
     var args = [ 'unknown' ];
     var cfg = {
@@ -401,14 +374,15 @@ test('unknown command', function(t) {
     };
 
     commandable(args, cfg)
-        .then(function() {
+        .then(function(cmd) {
+            t.ok(!cmd);
             t.ok(errorOutput);
             t.end();
         })
     ;
 });
 
-test('normalize arguments', function(t) {
+test('argument specs get normalized as an array of objects', function(t) {
     var normal = commandable.normalize({
         arguments: '<required> [optional]'
     });
@@ -420,7 +394,7 @@ test('normalize arguments', function(t) {
     t.end();
 });
 
-test('normalize arguments with dashes', function(t) {
+test('argument specs with dashes get normalized as camelCase', function(t) {
     var normal = commandable.normalize({
         arguments: '<required-arg> [optional-arg]'
     });
@@ -432,7 +406,7 @@ test('normalize arguments with dashes', function(t) {
     t.end();
 });
 
-test('normalize arguments with spaces', function(t) {
+test('arguments specs with spaces get normalized as camelCase', function(t) {
     var normal = commandable.normalize({
         arguments: '<required arg> [optional arg]'
     });
@@ -444,7 +418,7 @@ test('normalize arguments with spaces', function(t) {
     t.end();
 });
 
-test('normalize options', function(t) {
+test('options specified as functions use those as their types', function(t) {
     var normal = commandable.normalize({
         options: {
             bool: Boolean,
@@ -459,7 +433,7 @@ test('normalize options', function(t) {
     t.end();
 });
 
-test('normalize options with dashes', function(t) {
+test('options with param-case names get normalized as camelCase', function(t) {
     var normal = commandable.normalize({
         options: {
             'bool-opt': Boolean,
@@ -474,7 +448,7 @@ test('normalize options with dashes', function(t) {
     t.end();
 });
 
-test('normalize aliased options', function(t) {
+test('option aliases get normalized as an array including their param-case variants', function(t) {
     var normal = commandable.normalize({
         options: {
             firstOpt: {
@@ -484,18 +458,22 @@ test('normalize aliased options', function(t) {
             stringAlias: 'firstOpt', // string instead of object
             secondOpt: {
                 alias: [ 'secondAlias', 'thirdAlias' ] // in array
+            },
+            thirdOpt: {
+                // no aliases
             }
         }
     });
 
-    t.equal(Object.keys(normal.options).length, 2);
-    t.equal(normal.options.firstOpt.alias.length, 5);
-    t.equal(normal.options.secondOpt.alias.length, 5);
+    t.deepEqual(Object.keys(normal.options).sort(), [ 'firstOpt', 'secondOpt', 'thirdOpt' ]);
+    t.deepEqual(normal.options.firstOpt.alias.sort(), [ 'first-alias', 'first-opt', 'firstAlias', 'string-alias', 'stringAlias' ]);
+    t.deepEqual(normal.options.secondOpt.alias.sort(), [ 'second-alias', 'second-opt', 'secondAlias', 'third-alias', 'thirdAlias' ]);
+    t.deepEqual(normal.options.thirdOpt.alias.sort(), [ 'third-opt' ]);
 
     t.end();
 });
 
-test('normalize commands', function(t) {
+test('commands specified as functions get normalized as objects', function(t) {
     var normal = commandable.normalize({
         commands: {
             fn: function(cmd) {},
@@ -523,7 +501,7 @@ test('normalize commands', function(t) {
     t.end();
 });
 
-test('normalize main command', function(t) {
+test('configs specified as a function get normalized as an object', function(t) {
     var normal = commandable.normalize(function(cmd) {});
 
     t.equal(typeof normal, 'object');
