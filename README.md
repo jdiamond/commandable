@@ -3,13 +3,17 @@
 A minimal command-line interface framework powered by
 [minimist](https://github.com/substack/minimist).
 
-## Features:
+## Features
 
 - Commands, sub-commands, sub-sub-commands, etc
 - Options are scoped to their commands
 - Commands can return promises or use callbacks to defer exit
 - Automatic help output if you describe it
 - Control option parsing with standard minimist options
+
+## License
+
+MIT
 
 ## Install
 
@@ -107,7 +111,7 @@ The `cmd` argument looks like this:
 }
 ```
 
-### TODO
+## TODO
 
 - bash completions
 - env vars
@@ -116,3 +120,8 @@ The `cmd` argument looks like this:
 - required rest args
 - Date type
 - opt groups for help output
+- default values for optional arguments
+- help text for arguments and output in help
+- don't output help and exit when 'h' or 'help' option is configured
+- command aliases
+- validation functions for options and arguments

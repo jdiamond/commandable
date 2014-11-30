@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 require('../commandable')({
     options: {
         c: 'config',

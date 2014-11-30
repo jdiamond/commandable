@@ -130,7 +130,7 @@ test('commands aren\'t required', function(t) {
     });
 });
 
-test('main function accepts an optional callback argument', function(t) {
+test('main function accepts an optional callback', function(t) {
     var args = [ '-a', 'b', '-c', 'd' ];
     var cfg = {
         run: function(cmd) {
@@ -167,7 +167,7 @@ test('rejected promises log an error and exit', function(t) {
 
     commandable(args, cfg).then(function() {
         t.ok(errorMessage);
-        t.equal(exitCode, 1);
+        t.ok(exitCode);
         t.end();
     });
 });
@@ -192,7 +192,7 @@ test('commands that call back with an error log an error and exit', function(t) 
 
     commandable(args, cfg).then(function() {
         t.ok(errorMessage);
-        t.equal(exitCode, 1);
+        t.ok(exitCode);
         t.end();
     });
 });
@@ -217,7 +217,7 @@ test('commands that throw log an error and exit', function(t) {
 
     commandable(args, cfg).then(function() {
         t.ok(errorMessage);
-        t.equal(exitCode, 1);
+        t.ok(exitCode);
         t.end();
     });
 });
@@ -249,7 +249,8 @@ test('boolean, number, and string options are supported', function(t) {
 });
 
 test('unknown options result in no command running and an error logged', function(t) {
-    var errorOutput = '';
+    var errorLogged = false;
+    var exitCode = 0;
     var args = [ 'opt', '--foo', 'bar' ];
     var cfg = {
         commands: {
@@ -262,14 +263,18 @@ test('unknown options result in no command running and an error logged', functio
                 }
             }
         },
-        error: function(output) {
-            errorOutput += output;
+        error: function(message) {
+            errorLogged = true;
+        },
+        exit: function(code) {
+            exitCode = code;
         }
     };
 
     commandable(args, cfg).then(function(cmd) {
         t.ok(!cmd);
-        t.ok(errorOutput);
+        t.ok(errorLogged);
+        t.ok(exitCode);
         t.end();
     });
 });
@@ -388,7 +393,8 @@ test('arguments can be param-case in spec and camelCase in code', function(t) {
 });
 
 test('unknown commands result in no command running and an error logged', function(t) {
-    var errorOutput = '';
+    var errorLogged = false;
+    var exitCode = 0;
     var args = [ 'unknown' ];
     var cfg = {
         commands: {
@@ -396,15 +402,19 @@ test('unknown commands result in no command running and an error logged', functi
                 return cmd;
             }
         },
-        error: function(output) {
-            errorOutput += output;
+        error: function(message) {
+            errorLogged = true;
+        },
+        exit: function(code) {
+            exitCode = code;
         }
     };
 
     commandable(args, cfg)
         .then(function(cmd) {
             t.ok(!cmd);
-            t.ok(errorOutput);
+            t.ok(errorLogged);
+            t.ok(exitCode);
             t.end();
         })
     ;

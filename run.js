@@ -22,7 +22,10 @@ function run(argv, cfg, sup) {
         if (parsed.unknown) {
             error('Unknown option: %s', parsed.unknown);
             error();
-            return help(cfg, error);
+
+            help(cfg, error);
+
+            return exit(1);
         }
 
         if (parsed.help || parsed.h) {
@@ -35,44 +38,53 @@ function run(argv, cfg, sup) {
             sup: sup,
             cfg: cfg,
             opts: _.extend(Object.create(proto), _.omit(parsed, '_')),
-            args: collectArgs(parsed._, cfg),
+            args: collectNamedArgs(parsed._, cfg),
             rest: parsed._
         };
 
         if (parsed._.length) {
-            var camelCaseCommandName = changeCase.camelCase(parsed._[0]);
+            if (!_.isEmpty(cfg.commands)) {
+                var commandName = changeCase.camelCase(parsed._[0]);
 
-            if (cfg.commands && camelCaseCommandName in cfg.commands) {
-                var sub = cfg.commands[camelCaseCommandName];
+                if (!cfg.commands[commandName]) {
+                    var parents = (function sup(cfg) {
+                        return cfg.name ? sup(cfg.sup) + ' ' + changeCase.paramCase(cfg.name) : '';
+                    })(cfg);
+
+                    error('Unknown command: %s', (parents + ' ' + parsed._[0]).trim());
+                    error();
+
+                    help(cfg, error);
+
+                    return exit(1);
+                }
+
+                var sub = cfg.commands[commandName];
+
+                // move some of the super config down to the child config
                 sub.log = cfg.log;
                 sub.error = cfg.error;
                 sub.exit = cfg.exit;
+
                 return run(parsed._.slice(1), sub, cmd);
-            }
-
-            if (!_.isEmpty(cfg.commands) && parsed._.length) {
-                var parents = (function sup(cfg) {
-                    return cfg.name ? sup(cfg.sup) + ' ' + changeCase.paramCase(cfg.name) : '';
-                })(cfg);
-
-                error('Unknown command: %s', (parents + ' ' + parsed._[0]).trim());
-                error();
-
-                return help(cfg, error);
             }
         }
 
-        var missing = findMissing(cmd);
+        var missing = findFirstMissingArg(cmd);
 
         if (missing) {
             error('Missing argument: <%s>', changeCase.paramCase(missing));
             error();
 
-            return help(cfg, error);
+            help(cfg, error);
+
+            return exit(1);
         }
 
         if (!cfg.run) {
-            return help(cfg);
+            help(cfg, error);
+
+            return exit(1);
         }
 
         var inits = [];
@@ -104,7 +116,7 @@ function run(argv, cfg, sup) {
             })
         ;
 
-        function collectArgs(args, cfg) {
+        function collectNamedArgs(args, cfg) {
             return _(cfg.arguments)
                 .map(function(arg, i) {
                     return [ changeCase.camelCase(arg.name), args[i] ];
@@ -114,7 +126,7 @@ function run(argv, cfg, sup) {
             ;
         }
 
-        function findMissing(cmd) {
+        function findFirstMissingArg(cmd) {
             return cmd.cfg.arguments.reduce(function(missing, arg) {
                 return missing || (arg.required && !cmd.args[arg.name] && arg.name);
             }, null);
