@@ -27,11 +27,12 @@ function main(argv, cfg, callback) {
 }
 
 function run(argv, cfg, sup) {
+    normalize(cfg);
+
+    var error = cfg.error || console.error;
+    var exit = cfg.exit || process.exit;
+
     return new Promise(function(resolve, reject) {
-        var error = cfg.error || console.error;
-
-        normalize(cfg);
-
         var parsed = parse(argv, cfg);
 
         if (parsed.unknown) {
@@ -62,6 +63,7 @@ function run(argv, cfg, sup) {
                 var sub = cfg.commands[camelCaseCommandName];
                 sub.log = cfg.log;
                 sub.error = cfg.error;
+                sub.exit = cfg.exit;
                 return resolve(run(parsed._.slice(1), sub, cmd));
             }
 
@@ -118,6 +120,26 @@ function run(argv, cfg, sup) {
         } else {
             help(cfg);
         }
+
+        function collectArgs(args, cfg) {
+            return _(cfg.arguments)
+                .map(function(arg, i) {
+                    return [ changeCase.camelCase(arg.name), args[i] ];
+                })
+                .zipObject()
+                .value()
+            ;
+        }
+
+        function findMissing(cmd) {
+            return cmd.cfg.arguments.reduce(function(missing, arg) {
+                return missing || (arg.required && !cmd.args[arg.name] && arg.name);
+            }, null);
+        }
+    }).catch(function(err) {
+        var message = err && err.message || err;
+        error('Error: ' + message);
+        return exit(1);
     });
 }
 
@@ -318,20 +340,4 @@ function parse(argv, cfg) {
     });
 
     return parsed;
-}
-
-function collectArgs(args, cfg) {
-    return _(cfg.arguments)
-        .map(function(arg, i) {
-            return [ changeCase.camelCase(arg.name), args[i] ];
-        })
-        .zipObject()
-        .value()
-    ;
-}
-
-function findMissing(cmd) {
-    return cmd.cfg.arguments.reduce(function(missing, arg) {
-        return missing || (arg.required && !cmd.args[arg.name] && arg.name);
-    }, null);
 }

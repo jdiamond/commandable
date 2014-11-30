@@ -146,50 +146,77 @@ test('main function accepts an optional callback argument', function(t) {
     });
 });
 
-test('promises returned from commands can be rejected', function(t) {
+test('rejected promises log an error and exit', function(t) {
+    var errorMessage = null;
+    var exitCode = 0;
     var args = [ '-a', 'b', 'err', '-c', 'd' ];
     var cfg = {
         commands: {
             err: function(cmd) {
                 return Promise.reject(new Error('err'));
             }
+        },
+        error: function(message) {
+            errorMessage = message;
+        },
+        exit: function(code) {
+            exitCode = code;
         }
     };
 
-    commandable(args, cfg).catch(function(err) {
-        t.equal(err.message, 'err');
+    commandable(args, cfg).then(function() {
+        t.ok(errorMessage);
+        t.equal(exitCode, 1);
         t.end();
     });
 });
 
-test('commands that use callbacks can call back with an error', function(t) {
+test('commands that call back with an error log an error and exit', function(t) {
+    var errorMessage = null;
+    var exitCode = 0;
     var args = [ '-a', 'b', 'err2', '-c', 'd' ];
     var cfg = {
         commands: {
             err2: function(cmd, callback) {
                 callback(new Error('err2'));
             }
+        },
+        error: function(message) {
+            errorMessage = message;
+        },
+        exit: function(code) {
+            exitCode = code;
         }
     };
 
-    commandable(args, cfg, function(err) {
-        t.equal(err.message, 'err2');
+    commandable(args, cfg).then(function() {
+        t.ok(errorMessage);
+        t.equal(exitCode, 1);
         t.end();
     });
 });
 
-test('commands that throw turn into rejected promises', function(t) {
+test('commands that throw log an error and exit', function(t) {
+    var errorMessage = null;
+    var exitCode = 0;
     var args = [ '-a', 'b', 'throw', '-c', 'd' ];
     var cfg = {
         commands: {
             throw: function(cmd) {
                 throw new Error('thrown exception');
             }
+        },
+        error: function(message) {
+            errorMessage = message;
+        },
+        exit: function(code) {
+            exitCode = code;
         }
     };
 
-    commandable(args, cfg).catch(function(err) {
-        t.equal(err.message, 'thrown exception');
+    commandable(args, cfg).then(function() {
+        t.ok(errorMessage);
+        t.equal(exitCode, 1);
         t.end();
     });
 });

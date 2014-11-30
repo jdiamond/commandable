@@ -105,7 +105,6 @@ The `cmd` argument looks like this:
 ### TODO
 
 - bash completions
-- catch errors
 - env vars
 - notes
 - pre- and post-command callbacks
