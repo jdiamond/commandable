@@ -9,111 +9,17 @@ var commandable = require('./commandable');
 
 Promise.longStackTraces();
 
-var errorOutput = '';
-
-var cfg = {
-    commands: {
-        fn: function(cmd) {
-            return cmd;
-        },
-        fn2: function(cmd, callback) {
-            callback(null, cmd);
-        },
-        obj: {
-            run: function(cmd) {
-                return cmd;
-            }
-        },
-        obj2: {
-            callback: function(cmd, callback) {
-                callback(null, cmd);
-            }
-        },
-        sub: {
-            run: function(cmd) {
-                return cmd;
-            },
-            commands: {
-                sub2: function(cmd) {
-                    return cmd;
-                }
-            }
-        },
-        err: function(cmd) {
-            return Promise.reject(new Error('err'));
-        },
-        err2: function(cmd, callback) {
-            callback(new Error('err2'));
-        },
-        throw: function(cmd) {
-            throw new Error('throw');
-        },
-        opt: {
-            options: {
-                bool: Boolean,
-                num: Number,
-                str: String
-            },
-            run: function(cmd) {
-                return cmd;
-            }
-        },
-        camelCaseOpts: {
-            options: {
-                fooBar: String,
-                bazQuux: String
-            },
-            run: function(cmd) {
-                return cmd;
-            }
-        },
-        defaultOpts: {
-            options: {
-                foo: {
-                    type: String,
-                    default: 'defaultFoo'
-                },
-                bar: {
-                    type: String,
-                    default: 'defaultBar'
-                }
-            },
-            run: function(cmd) {
-                return cmd;
-            }
-        },
-        aliasedOpts: {
-            options: {
-                firstOpt: {
-                    type: String,
-                    alias: 'firstAlias' // not array
-                },
-                stringAlias: 'firstOpt', // string instead of object
-                secondOpt: {
-                    alias: [ 'secondAlias', 'thirdAlias' ] // in array
-                }
-            },
-            run: function(cmd) {
-                return cmd;
-            }
-        },
-        paramCaseArgs: {
-            arguments: '<foo-bar> [baz-quux]',
-            run: function(cmd) {
+test('fn', function(t) {
+    var args = [ '-a', 'b', 'fn', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            fn: function(cmd) {
                 return cmd;
             }
         }
-    },
-    run: function(cmd) {
-        return cmd;
-    },
-    error: function(output) {
-        errorOutput += output;
-    }
-};
+    };
 
-test('fn', function(t) {
-    commandable([ '-a', 'b', 'fn', '-c', 'd' ], cfg).then(function(cmd) {
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, 'fn');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -122,7 +28,16 @@ test('fn', function(t) {
 });
 
 test('fn2', function(t) {
-    commandable([ '-a', 'b', 'fn2', '-c', 'd' ], cfg, function(err, cmd) {
+    var args = [ '-a', 'b', 'fn2', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            fn2: function(cmd, callback) {
+                callback(null, cmd);
+            }
+        }
+    };
+
+    commandable(args, cfg, function(err, cmd) {
         if (err) { return t.end(err); }
         t.equal(cmd.cfg.name, 'fn2');
         t.equal(cmd.opts.a, 'b');
@@ -132,7 +47,18 @@ test('fn2', function(t) {
 });
 
 test('obj', function(t) {
-    commandable([ '-a', 'b', 'obj', '-c', 'd' ], cfg).then(function(cmd) {
+    var args = [ '-a', 'b', 'obj', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            obj: {
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, 'obj');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -141,7 +67,18 @@ test('obj', function(t) {
 });
 
 test('obj2', function(t) {
-    commandable([ '-a', 'b', 'obj2', '-c', 'd' ], cfg, function(err, cmd) {
+    var args = [ '-a', 'b', 'obj2', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            obj2: {
+                callback: function(cmd, callback) {
+                    callback(null, cmd);
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg, function(err, cmd) {
         if (err) { return t.end(err); }
         t.equal(cmd.cfg.name, 'obj2');
         t.equal(cmd.opts.a, 'b');
@@ -151,7 +88,23 @@ test('obj2', function(t) {
 });
 
 test('sub', function(t) {
-    commandable([ '-a', 'b', 'sub', '-c', 'd' ], cfg).then(function(cmd) {
+    var args = [ '-a', 'b', 'sub', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            sub: {
+                run: function(cmd) {
+                    return cmd;
+                },
+                commands: {
+                    sub2: function(cmd) {
+                        return cmd;
+                    }
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, 'sub');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -160,7 +113,23 @@ test('sub', function(t) {
 });
 
 test('sub2', function(t) {
-    commandable([ '-a', 'b', 'sub', '-c', 'd', 'sub2', '-e', 'f' ], cfg).then(function(cmd) {
+    var args = [ '-a', 'b', 'sub', '-c', 'd', 'sub2', '-e', 'f' ];
+    var cfg = {
+        commands: {
+            sub: {
+                run: function(cmd) {
+                    return cmd;
+                },
+                commands: {
+                    sub2: function(cmd) {
+                        return cmd;
+                    }
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, 'sub2');
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -170,7 +139,14 @@ test('sub2', function(t) {
 });
 
 test('none', function(t) {
-    commandable([ '-a', 'b', '-c', 'd' ], cfg).then(function(cmd) {
+    var args = [ '-a', 'b', '-c', 'd' ];
+    var cfg = {
+        run: function(cmd) {
+            return cmd;
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, undefined);
         t.equal(cmd.opts.a, 'b');
         t.equal(cmd.opts.c, 'd');
@@ -179,7 +155,14 @@ test('none', function(t) {
 });
 
 test('callback', function(t) {
-    commandable([ '-a', 'b', '-c', 'd' ], cfg, function(err, cmd) {
+    var args = [ '-a', 'b', '-c', 'd' ];
+    var cfg = {
+        run: function(cmd) {
+            return cmd;
+        }
+    };
+
+    commandable(args, cfg, function(err, cmd) {
         if (err) { return t.end(err); }
         t.equal(cmd.cfg.name, undefined);
         t.equal(cmd.opts.a, 'b');
@@ -189,28 +172,71 @@ test('callback', function(t) {
 });
 
 test('err', function(t) {
-    commandable([ '-a', 'b', 'err', '-c', 'd' ], cfg).catch(function(err) {
+    var args = [ '-a', 'b', 'err', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            err: function(cmd) {
+                return Promise.reject(new Error('err'));
+            }
+        }
+    };
+
+    commandable(args, cfg).catch(function(err) {
         t.equal(err.message, 'err');
         t.end();
     });
 });
 
 test('err2', function(t) {
-    commandable([ '-a', 'b', 'err2', '-c', 'd' ], cfg, function(err) {
+    var args = [ '-a', 'b', 'err2', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            err2: function(cmd, callback) {
+                callback(new Error('err2'));
+            }
+        }
+    };
+
+    commandable(args, cfg, function(err) {
         t.equal(err.message, 'err2');
         t.end();
     });
 });
 
 test('throw', function(t) {
-    commandable([ '-a', 'b', 'throw', '-c', 'd' ], cfg).catch(function(err) {
+    var args = [ '-a', 'b', 'throw', '-c', 'd' ];
+    var cfg = {
+        commands: {
+            throw: function(cmd) {
+                throw new Error('throw');
+            }
+        }
+    };
+
+    commandable(args, cfg).catch(function(err) {
         t.equal(err.message, 'throw');
         t.end();
     });
 });
 
 test('known options', function(t) {
-    commandable([ 'opt', '--bool', '--num', '123', '--str', 'abc' ], cfg).then(function(cmd) {
+    var args = [ 'opt', '--bool', '--num', '123', '--str', 'abc' ];
+    var cfg = {
+        commands: {
+            opt: {
+                options: {
+                    bool: Boolean,
+                    num: Number,
+                    str: String
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, 'opt');
         t.equal(cmd.opts.bool, true);
         t.equal(cmd.opts.num, 123);
@@ -220,18 +246,49 @@ test('known options', function(t) {
 });
 
 test('unknown options', function(t) {
-    errorOutput = '';
+    var errorOutput = '';
+    var args = [ 'opt', '--foo', 'bar' ];
+    var cfg = {
+        commands: {
+            opt: {
+                options: {
+                    bool: Boolean,
+                    num: Number,
+                    str: String
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        },
+        error: function(output) {
+            errorOutput += output;
+        }
+    };
 
-    commandable([ 'opt', '--foo', 'bar' ], cfg)
-        .then(function() {
-            t.ok(errorOutput);
-            t.end();
-        })
-    ;
+    commandable(args, cfg).then(function() {
+        t.ok(errorOutput);
+        t.end();
+    });
 });
 
 test('camelCaseOpts', function(t) {
-    commandable([ 'camel-case-opts', '--foo-bar', 'opt1', '--baz-quux', 'opt2' ], cfg).then(function(cmd) {
+    var args = [ 'camel-case-opts', '--foo-bar', 'opt1', '--baz-quux', 'opt2' ];
+    var cfg = {
+        commands: {
+            camelCaseOpts: {
+                options: {
+                    fooBar: String,
+                    bazQuux: String
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         console.log(cmd);
         t.equal(cmd.opts.fooBar, 'opt1');
         t.equal(cmd.opts.bazQuux, 'opt2');
@@ -240,7 +297,28 @@ test('camelCaseOpts', function(t) {
 });
 
 test('defaultOpts', function(t) {
-    commandable([ 'default-opts', '--foo', 'notDefaultFoo' ], cfg).then(function(cmd) {
+    var args = [ 'default-opts', '--foo', 'notDefaultFoo' ];
+    var cfg = {
+        commands: {
+            defaultOpts: {
+                options: {
+                    foo: {
+                        type: String,
+                        default: 'defaultFoo'
+                    },
+                    bar: {
+                        type: String,
+                        default: 'defaultBar'
+                    }
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.opts.foo, 'notDefaultFoo');
         t.equal(cmd.opts.bar, 'defaultBar');
         t.end();
@@ -248,7 +326,28 @@ test('defaultOpts', function(t) {
 });
 
 test('aliasedOpts', function(t) {
-    commandable([ 'aliased-opts', '--first-opt', 'foo', '--secondOpt', 'bar' ], cfg).then(function(cmd) {
+    var args = [ 'aliased-opts', '--first-opt', 'foo', '--secondOpt', 'bar' ];
+    var cfg = {
+        commands: {
+            aliasedOpts: {
+                options: {
+                    firstOpt: {
+                        type: String,
+                        alias: 'firstAlias' // not array
+                    },
+                    stringAlias: 'firstOpt', // string instead of object
+                    secondOpt: {
+                        alias: [ 'secondAlias', 'thirdAlias' ] // in array
+                    }
+                },
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.opts.firstOpt, 'foo');
         t.equal(cmd.opts['first-opt'], 'foo');
         t.equal(cmd.opts.firstAlias, 'foo');
@@ -266,7 +365,19 @@ test('aliasedOpts', function(t) {
 });
 
 test('paramCaseArgs', function(t) {
-    commandable([ 'param-case-args', 'arg1', 'arg2', 'arg3', 'arg4' ], cfg).then(function(cmd) {
+    var args = [ 'param-case-args', 'arg1', 'arg2', 'arg3', 'arg4' ];
+    var cfg = {
+        commands: {
+            paramCaseArgs: {
+                arguments: '<foo-bar> [baz-quux]',
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
         t.equal(cmd.cfg.name, 'paramCaseArgs');
         t.equal(Object.keys(cmd.args).length, 2);
         t.equal(cmd.args.fooBar, 'arg1');
@@ -276,9 +387,20 @@ test('paramCaseArgs', function(t) {
 });
 
 test('unknown command', function(t) {
-    errorOutput = '';
+    var errorOutput = '';
+    var args = [ 'unknown' ];
+    var cfg = {
+        commands: {
+            known: function(cmd) {
+                return cmd;
+            }
+        },
+        error: function(output) {
+            errorOutput += output;
+        }
+    };
 
-    commandable([ 'unknown' ], cfg)
+    commandable(args, cfg)
         .then(function() {
             t.ok(errorOutput);
             t.end();
