@@ -34,15 +34,13 @@ function run(argv, cfg, sup) {
 
         var proto = sup && sup.opts || Object.prototype;
 
-        var parsedArgs = parseArgs(parsed._, cfg);
-
         var cmd = {
             sup: sup,
             cfg: cfg,
             opts: _.extend(Object.create(proto), _.omit(parsed, '_')),
             argv: parsed._,
-            args: parsedArgs.named,
-            rest: parsedArgs.rest
+            args: {},
+            rest: []
         };
 
         if (parsed._.length) {
@@ -73,6 +71,11 @@ function run(argv, cfg, sup) {
                 return run(parsed._.slice(1), sub, cmd);
             }
         }
+
+        var parsedArgs = parseArgs(parsed._, cfg);
+
+        cmd.args = parsedArgs.named;
+        cmd.rest = parsedArgs.rest;
 
         var missing = findFirstMissingArg(cmd);
 
