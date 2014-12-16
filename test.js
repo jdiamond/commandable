@@ -256,7 +256,7 @@ test('unknown options result in no command running and an error logged', functio
         commands: {
             opt: {
                 options: {
-                    dummy: String // at least option is required
+                    dummy: String // at least one option is required
                 },
                 run: function(cmd) {
                     return cmd;
@@ -275,6 +275,38 @@ test('unknown options result in no command running and an error logged', functio
         t.ok(!cmd);
         t.ok(errorLogged);
         t.ok(exitCode);
+        t.end();
+    });
+});
+
+test('unknown can be defined to skip errors', function(t) {
+    var errorLogged = false;
+    var exitCode = 0;
+    var args = [ 'opt', '--foo', 'bar' ];
+    var cfg = {
+        commands: {
+            opt: {
+                options: {
+                    dummy: String // at least one option is required
+                },
+                unknown: function() {},
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        },
+        error: function(message) {
+            errorLogged = true;
+        },
+        exit: function(code) {
+            exitCode = code;
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.ok(cmd);
+        t.ok(!errorLogged);
+        t.ok(!exitCode);
         t.end();
     });
 });

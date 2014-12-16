@@ -57,7 +57,7 @@ function parse(argv, cfg) {
 
     var unknown;
 
-    if (!_.isEmpty(_.omit(mergedOptions, [ 'help' ]))) {
+    if (!cfg.unknown && !_.isEmpty(_.omit(mergedOptions, [ 'help' ]))) {
         cfg.unknown = function(name) {
             // arguments also get passed to unknown
             if (name.charAt(0) === '-' && name.length > 1) {
