@@ -402,6 +402,25 @@ test('options can have aliases', function(t) {
     });
 });
 
+test('single-letter option aliases are case-sensitive', function(t) {
+    var args = [ '--host', 'foo' ];
+    var cfg = {
+        options: {
+            host: { type: String, alias: [ 'H' ] }
+        },
+        run: function(cmd) {
+            return cmd;
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.opts.host, 'foo', 'aaa');
+        t.equal(cmd.opts.H, 'foo', 'bbb');
+        t.notEqual(cmd.opts.h, 'foo', 'ccc');
+        t.end();
+    });
+});
+
 test('options can get default values from the environment', function(t) {
     var args = [ 'my-cmd' ];
     var cfg = {

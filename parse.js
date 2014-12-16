@@ -20,15 +20,19 @@ function parse(argv, cfg) {
         var aliases = [ key ].concat(mergedOptions[key].alias || []);
 
         aliases.forEach(function(alias) {
-            var camelCase = changeCase.camelCase(alias);
-            var paramCase = changeCase.paramCase(alias);
+            if (alias.length === 1) {
+                cfg.alias[alias] = key;
+            } else {
+                var camelCase = changeCase.camelCase(alias);
+                var paramCase = changeCase.paramCase(alias);
 
-            if (camelCase !== key) {
-                cfg.alias[camelCase] = key;
-            }
+                if (camelCase !== key) {
+                    cfg.alias[camelCase] = key;
+                }
 
-            if (paramCase !== key) {
-                cfg.alias[paramCase] = key;
+                if (paramCase !== key) {
+                    cfg.alias[paramCase] = key;
+                }
             }
         });
     });
@@ -111,15 +115,21 @@ function parse(argv, cfg) {
 
     Object.keys(parsed).forEach(function(key) {
         if (key !== '_') {
-            parsed[changeCase.camelCase(key)] =
-            parsed[changeCase.paramCase(key)] = parsed[key];
+            if (key.length > 1) {
+                parsed[changeCase.camelCase(key)] =
+                parsed[changeCase.paramCase(key)] = parsed[key];
+            }
 
             var opt = mergedOptions[changeCase.camelCase(key)];
 
             if (opt) {
                 opt.alias.forEach(function(alias) {
-                    parsed[changeCase.camelCase(alias)] =
-                    parsed[changeCase.paramCase(alias)] = parsed[key];
+                    if (alias.length === 1) {
+                        parsed[alias] = parsed[key];
+                    } else {
+                        parsed[changeCase.camelCase(alias)] =
+                        parsed[changeCase.paramCase(alias)] = parsed[key];
+                    }
                 });
             }
         }

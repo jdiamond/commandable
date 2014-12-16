@@ -28,7 +28,7 @@ function run(argv, cfg, sup) {
             return exit(1);
         }
 
-        if (parsed.help || parsed.h) {
+        if (parsed.help) {
             return help(cfg);
         }
 

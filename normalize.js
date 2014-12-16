@@ -38,7 +38,9 @@ function normalize(cfg) {
     cfg.options = {};
 
     Object.keys(opts).forEach(function(key) {
-        cfg.options[changeCase.camelCase(key)] = opts[key];
+        if (key.length > 1) {
+            cfg.options[changeCase.camelCase(key)] = opts[key];
+        }
     });
 
     Object.keys(cfg.options).forEach(function(key) {
@@ -70,12 +72,18 @@ function normalize(cfg) {
 
         var aliases = {};
 
-        aliases[changeCase.camelCase(key)] = true;
-        aliases[changeCase.paramCase(key)] = true;
+        if (key.length > 1) {
+            aliases[changeCase.camelCase(key)] = true;
+            aliases[changeCase.paramCase(key)] = true;
+        }
 
         opt.alias.forEach(function(alias) {
-            aliases[changeCase.camelCase(alias)] = true;
-            aliases[changeCase.paramCase(alias)] = true;
+            if (alias.length === 1) {
+                aliases[alias] = true;
+            } else {
+                aliases[changeCase.camelCase(alias)] = true;
+                aliases[changeCase.paramCase(alias)] = true;
+            }
         });
 
         opt.alias = _(aliases).omit(key).keys().value();
