@@ -208,7 +208,6 @@ function outputCommands(commands, log) {
         log();
 
         log(columnify(commands, {
-            // maxLineWidth: process.stdout.columns,
             showHeaders: false,
             columnSplitter: '   ',
             columns: [ 'empty', 'name', 'help' ],
@@ -218,7 +217,7 @@ function outputCommands(commands, log) {
                     maxWidth: 16
                 },
                 help: {
-                    maxWidth: 64 - 6
+                    maxWidth: process.stdout.columns - 16 - 6
                 }
             }
         }));
