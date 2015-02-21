@@ -16,6 +16,7 @@ function help(cfg, log) {
 
     log = log || cfg.log || console.log;
 
+    outputDescription(cfg, log);
     outputUsage(usage, log);
     outputOptions(options, log);
     outputArguments(args, log);
@@ -149,6 +150,13 @@ function getCommands(cfg) {
         })
         .value()
     ;
+}
+
+function outputDescription(cfg, log) {
+    if (cfg.help) {
+        log('Description: %s', cfg.help);
+        log();
+    }
 }
 
 function outputUsage(usage, log) {
