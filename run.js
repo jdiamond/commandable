@@ -45,16 +45,18 @@ function run(argv, cfg, sup) {
 
         if (parsed._.length) {
             if (!_.isEmpty(cfg.commands)) {
-                var aliases = _(cfg.commands)
+                var aliases = _.zipObject(_(cfg.commands)
                     .pairs()
                     .filter(function(pair) {
-                        return typeof pair[1].alias === 'string';
+                        return Array.isArray(pair[1].alias);
                     })
-                    .map(function(pair) {
-                        return [ changeCase.camelCase(pair[1].alias), changeCase.camelCase(pair[0]) ];
-                    })
-                    .zipObject()
-                    .value()
+                    .reduce(function(arr, pair) {
+                        return arr.concat(
+                            pair[1].alias.map(function(alias) {
+                                return [ changeCase.camelCase(alias), changeCase.camelCase(pair[0]) ];
+                            })
+                        );
+                    }, []))
                 ;
 
                 var commandName = changeCase.camelCase(parsed._[0]);

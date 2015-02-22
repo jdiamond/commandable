@@ -121,7 +121,6 @@ Additional features:
 - Date type
 - multi options
 - default values for optional arguments
-- command aliases
 - validation functions for options and arguments
 - argument types
 

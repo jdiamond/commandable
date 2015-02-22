@@ -617,6 +617,25 @@ test('commands can have aliases', function(t) {
     });
 });
 
+test('commands can have multiple aliases', function(t) {
+    var args = [ 'cmd2' ];
+    var cfg = {
+        commands: {
+            command: {
+                alias: [ 'cmd1', 'cmd2' ],
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'command');
+        t.end();
+    });
+});
+
 test('argument specs get normalized as an array of objects', function(t) {
     var normal = normalize({
         arguments: '<required> [optional]'

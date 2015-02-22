@@ -10,6 +10,10 @@ function normalize(cfg) {
         cfg = { run: cfg };
     }
 
+    if (typeof cfg.alias === 'string') {
+        cfg.alias = [ cfg.alias ];
+    }
+
     cfg.arguments =
         typeof cfg.arguments === 'string'
         ? _.map(parseArgs(cfg.arguments), function(arg) {
