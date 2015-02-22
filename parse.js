@@ -7,62 +7,64 @@ var minimist   = require('minimist');
 module.exports = parse;
 
 function parse(argv, cfg) {
-    cfg.stopEarly = true;
+    var minCfg = {};
+
+    minCfg.stopEarly = true;
 
     var mergedOptions = (function mergeOptions(cfg, options) {
         options = _.extend(options, cfg.options);
         return cfg.sup ? mergeOptions(cfg.sup, options) : options;
     })(cfg, { help: { type: Boolean, alias: [ 'h' ] } });
 
-    cfg.alias = cfg.alias || {};
+    minCfg.alias = typeof cfg.alias === 'object' ? cfg.alias : {};
 
     Object.keys(mergedOptions).forEach(function(key) {
         var aliases = [ key ].concat(mergedOptions[key].alias || []);
 
         aliases.forEach(function(alias) {
             if (alias.length === 1) {
-                cfg.alias[alias] = key;
+                minCfg.alias[alias] = key;
             } else {
                 var camelCase = changeCase.camelCase(alias);
                 var paramCase = changeCase.paramCase(alias);
 
                 if (camelCase !== key) {
-                    cfg.alias[camelCase] = key;
+                    minCfg.alias[camelCase] = key;
                 }
 
                 if (paramCase !== key) {
-                    cfg.alias[paramCase] = key;
+                    minCfg.alias[paramCase] = key;
                 }
             }
         });
     });
 
-    cfg.boolean = _(mergedOptions).pairs().filter(function(pair) {
+    minCfg.boolean = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         // only include boolean options
         return type === Boolean;
     }).pluck(0).value();
 
-    cfg.string = _(mergedOptions).pairs().filter(function(pair) {
+    minCfg.string = _(mergedOptions).pairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         // exclude aliases, booleans, and numbers
         return typeof type !== 'string' && type !== Boolean && type !== Number;
     }).pluck(0).value();
 
-    cfg.default = cfg.default || {};
+    minCfg.default = cfg.default || {};
 
     Object.keys(mergedOptions).forEach(function(key) {
         var opt = mergedOptions[key];
 
         if (opt.default && !opt.env) {
-            cfg.default[key] = mergedOptions[key].default;
+            minCfg.default[key] = mergedOptions[key].default;
         }
     });
 
     var unknown;
 
     if (!cfg.unknown && !_.isEmpty(_.omit(mergedOptions, [ 'help' ]))) {
-        cfg.unknown = function(name) {
+        minCfg.unknown = function(name) {
             // arguments also get passed to unknown
             if (name.charAt(0) === '-' && name.length > 1) {
                 if (!unknown) {
@@ -78,7 +80,7 @@ function parse(argv, cfg) {
         };
     }
 
-    var parsed = minimist(argv, cfg);
+    var parsed = minimist(argv, minCfg);
 
     if (unknown) {
         return {

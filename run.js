@@ -45,7 +45,21 @@ function run(argv, cfg, sup) {
 
         if (parsed._.length) {
             if (!_.isEmpty(cfg.commands)) {
+                var aliases = _(cfg.commands)
+                    .pairs()
+                    .filter(function(pair) {
+                        return typeof pair[1].alias === 'string';
+                    })
+                    .map(function(pair) {
+                        return [ changeCase.camelCase(pair[1].alias), changeCase.camelCase(pair[0]) ];
+                    })
+                    .zipObject()
+                    .value()
+                ;
+
                 var commandName = changeCase.camelCase(parsed._[0]);
+
+                commandName = aliases[commandName] || commandName;
 
                 if (!cfg.commands[commandName]) {
                     var parents = (function sup(cfg) {

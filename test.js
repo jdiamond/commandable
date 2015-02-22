@@ -598,6 +598,25 @@ test('unknown commands result in no command running and an error logged', functi
     ;
 });
 
+test('commands can have aliases', function(t) {
+    var args = [ 'cmd' ];
+    var cfg = {
+        commands: {
+            command: {
+                alias: 'cmd',
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'command');
+        t.end();
+    });
+});
+
 test('argument specs get normalized as an array of objects', function(t) {
     var normal = normalize({
         arguments: '<required> [optional]'
