@@ -570,6 +570,26 @@ test('multi arguments get parsed into an array', function(t) {
     });
 });
 
+test('optional multi arguments get provide an empty array', function(t) {
+    var args = [ 'optional-multi-args' ];
+    var cfg = {
+        commands: {
+            optionalMultiArgs: {
+                arguments: '[files...]',
+                run: function(cmd) {
+                    return cmd;
+                }
+            }
+        }
+    };
+
+    commandable(args, cfg).then(function(cmd) {
+        t.equal(cmd.cfg.name, 'optionalMultiArgs');
+        t.deepEqual(cmd.args.files, []);
+        t.end();
+    });
+});
+
 test('unknown commands result in no command running and an error logged', function(t) {
     var errorLogged = false;
     var exitCode = 0;

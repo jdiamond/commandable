@@ -158,6 +158,16 @@ function run(argv, cfg, sup) {
                 .value()
             ;
 
+            _(cfg.arguments)
+                .filter(function(arg) {
+                    return arg.multi;
+                })
+                .each(function(arg) {
+                    var name = changeCase.camelCase(arg.name);
+                    named[name] = named[name] || [];
+                })
+            ;
+
             return {
                 named: named,
                 rest: args.slice(count)
