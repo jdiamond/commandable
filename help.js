@@ -71,7 +71,18 @@ function getOptions(cfg) {
     })(cfg.sup);
 
     var aliases = _(cfg.alias || {})
-        .defaults(_.pick(options, _.isString))
+        .defaults(
+            _(options)
+            .pairs()
+            .map(function(pair) {
+                return pair[1].alias.map(function(alias) {
+                    return [ alias, pair[0] ];
+                });
+            })
+            .flatten()
+            .zipObject()
+            .value()
+        )
         .defaults({ h: 'help' })
         .pairs()
         .groupBy(1)

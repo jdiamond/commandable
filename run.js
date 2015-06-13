@@ -166,6 +166,7 @@ function run(argv, cfg, sup) {
                     var name = changeCase.camelCase(arg.name);
                     named[name] = named[name] || [];
                 })
+                .run()
             ;
 
             return {

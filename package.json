@@ -22,7 +22,7 @@
     "bluebird": "2.3.11",
     "change-case": "2.1.5",
     "columnify": "1.2.1",
-    "lodash": "2.4.1",
+    "lodash": "3.9.3",
     "minimist": "1.1.0"
   },
   "devDependencies": {

@@ -32,19 +32,13 @@ function normalize(cfg) {
     });
 
     var opts = _.mapValues(cfg.options || {}, function(val, key) {
-        if (typeof val === 'function') {
-            return { type: val };
-        } else {
-            return val;
-        }
+        return typeof val === 'function' ? { type: val } : val;
     });
 
     cfg.options = {};
 
     Object.keys(opts).forEach(function(key) {
-        if (key.length > 1) {
-            cfg.options[changeCase.camelCase(key)] = opts[key];
-        }
+        cfg.options[changeCase.camelCase(key)] = opts[key];
     });
 
     Object.keys(cfg.options).forEach(function(key) {
