@@ -177,7 +177,11 @@ function run(argv, cfg, sup) {
 
         function findFirstMissingArg(cmd) {
             return cmd.cfg.arguments.reduce(function(missing, arg) {
-                return missing || (arg.required && !cmd.args[arg.name] && arg.name);
+                if (missing) { return missing; }
+                if (!arg.required) { return false; }
+                var val = cmd.args[changeCase.camelCase(arg.name)];
+                if (!val || (arg.multi && !val.length)) { return arg.name; }
+                return false;
             }, null);
         }
     }).catch(function(err) {
