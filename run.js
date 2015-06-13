@@ -64,8 +64,8 @@ function run(argv, cfg, sup) {
                 commandName = aliases[commandName] || commandName;
 
                 if (!cfg.commands[commandName]) {
-                    var parents = (function sup(cfg) {
-                        return cfg.name ? sup(cfg.sup) + ' ' + changeCase.paramCase(cfg.name) : '';
+                    var parents = (function getSuper(c) {
+                        return c.name ? getSuper(c.sup) + ' ' + changeCase.paramCase(c.name) : '';
                     })(cfg);
 
                     error('Unknown command: %s', (parents + ' ' + parsed._[0]).trim());
@@ -93,10 +93,10 @@ function run(argv, cfg, sup) {
         cmd.args = parsedArgs.named;
         cmd.rest = parsedArgs.rest;
 
-        var missing = findFirstMissingArg(cmd);
+        var firstMissing = findFirstMissingArg(cmd);
 
-        if (missing) {
-            error('Missing argument: %s', changeCase.paramCase(missing));
+        if (firstMissing) {
+            error('Missing argument: %s', changeCase.paramCase(firstMissing));
             error();
 
             help(cfg, error);
@@ -112,17 +112,17 @@ function run(argv, cfg, sup) {
 
         var inits = [];
 
-        (function init(cfg) {
-            if (cfg.sup) {
-                init(cfg.sup);
+        (function init(c) {
+            if (c.sup) {
+                init(c.sup);
             }
 
-            if (cfg.init) {
+            if (c.init) {
                 inits.push(function() {
-                    if (cfg.init.length === 2) {
-                        return Promise.promisify(cfg.init)(cmd);
+                    if (c.init.length === 2) {
+                        return Promise.promisify(c.init)(cmd);
                     } else {
-                        return cfg.init(cmd);
+                        return c.init(cmd);
                     }
                 });
             }
@@ -139,9 +139,9 @@ function run(argv, cfg, sup) {
             })
         ;
 
-        function parseArgs(args, cfg) {
+        function parseArgs(args, c) {
             var count = 0;
-            var named = _(cfg.arguments)
+            var named = _(c.arguments)
                 .map(function(arg, i) {
                     if (i < args.length) {
                         count++;
@@ -158,7 +158,7 @@ function run(argv, cfg, sup) {
                 .value()
             ;
 
-            _(cfg.arguments)
+            _(c.arguments)
                 .filter(function(arg) {
                     return arg.multi;
                 })
@@ -175,11 +175,11 @@ function run(argv, cfg, sup) {
             };
         }
 
-        function findFirstMissingArg(cmd) {
-            return cmd.cfg.arguments.reduce(function(missing, arg) {
+        function findFirstMissingArg(c) {
+            return c.cfg.arguments.reduce(function(missing, arg) {
                 if (missing) { return missing; }
                 if (!arg.required) { return false; }
-                var val = cmd.args[changeCase.camelCase(arg.name)];
+                var val = c.args[changeCase.camelCase(arg.name)];
                 if (!val || (arg.multi && !val.length)) { return arg.name; }
                 return false;
             }, null);

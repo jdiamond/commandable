@@ -19,16 +19,16 @@
   ],
   "main": "commandable.js",
   "dependencies": {
-    "bluebird": "2.3.11",
-    "change-case": "2.1.5",
-    "columnify": "1.2.1",
+    "bluebird": "2.9.27",
+    "change-case": "2.3.0",
+    "columnify": "1.5.1",
     "lodash": "3.9.3",
-    "minimist": "1.1.0"
+    "minimist": "1.1.1"
   },
   "devDependencies": {
-    "eslint": "0.10.0",
+    "eslint": "0.22.1",
     "faucet": "0.0.1",
-    "tape": "3.0.3"
+    "tape": "4.0.0"
   },
   "scripts": {
     "test": "eslint *.js && node test.js | faucet"

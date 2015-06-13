@@ -11,9 +11,9 @@ function parse(argv, cfg) {
 
     minCfg.stopEarly = true;
 
-    var mergedOptions = (function mergeOptions(cfg, options) {
-        options = _.extend(options, cfg.options);
-        return cfg.sup ? mergeOptions(cfg.sup, options) : options;
+    var mergedOptions = (function mergeOptions(c, options) {
+        options = _.extend(options, c.options);
+        return c.sup ? mergeOptions(c.sup, options) : options;
     })(cfg, { help: { type: Boolean, alias: [ 'h' ] } });
 
     minCfg.alias = typeof cfg.alias === 'object' ? cfg.alias : {};

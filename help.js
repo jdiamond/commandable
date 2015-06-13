@@ -26,8 +26,8 @@ function help(cfg, log) {
 }
 
 function getUsage(cfg, options, commands) {
-    var usage = (function sup(cfg) {
-        return cfg.name ? sup(cfg.sup) + ' ' + changeCase.paramCase(cfg.name) : '';
+    var usage = (function sup(c) {
+        return c.name ? sup(c.sup) + ' ' + changeCase.paramCase(c.name) : '';
     })(cfg);
 
     if (options.length) {
@@ -63,10 +63,10 @@ function getUsage(cfg, options, commands) {
 function getOptions(cfg) {
     var options = cfg.options || {};
 
-    (function mergeParentOptions(cfg) {
-        if (cfg) {
-            options = _.extend(options, cfg.options || {});
-            mergeParentOptions(cfg.sup);
+    (function mergeParentOptions(c) {
+        if (c) {
+            options = _.extend(options, c.options || {});
+            mergeParentOptions(c.sup);
         }
     })(cfg.sup);
 
@@ -116,8 +116,8 @@ function getOptions(cfg) {
             names.push(paramCase);
         }
 
-        var opts = _.groupBy(names, function(name) {
-            return name.length === 1 ? 'short' : 'long';
+        var opts = _.groupBy(names, function(n) {
+            return n.length === 1 ? 'short' : 'long';
         });
 
         var short = opts.short && opts.short.map(function(opt) { return '-' + opt; }) || [];
