@@ -73,27 +73,27 @@ function getOptions(cfg) {
     var aliases = _(cfg.alias || {})
         .defaults(
             _(options)
-            .pairs()
+            .toPairs()
             .map(function(pair) {
                 return pair[1].alias.map(function(alias) {
                     return [ alias, pair[0] ];
                 });
             })
             .flatten()
-            .zipObject()
+            .fromPairs()
             .value()
         )
         .defaults({ h: 'help' })
-        .pairs()
+        .toPairs()
         .groupBy(1)
-        .mapValues(function(pairs) { return _.pluck(pairs, 0); })
+        .mapValues(function(pairs) { return _.map(pairs, 0); })
         .value()
     ;
 
     return _(options)
         .defaults({ help: { help: 'show help output' } })
         .omit(_.isString)
-        .pairs()
+        .toPairs()
         .sortBy(function(pair) {
             return pair[0].toLowerCase();
         })
@@ -149,7 +149,7 @@ function getCommands(cfg) {
 
     return _(commands)
         .omit(_.isString)
-        .pairs()
+        .toPairs()
         .sortBy(function(pair) {
             return pair[0].toLowerCase();
         })

@@ -39,17 +39,17 @@ function parse(argv, cfg) {
         });
     });
 
-    minCfg.boolean = _(mergedOptions).pairs().filter(function(pair) {
+    minCfg.boolean = _(mergedOptions).toPairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         // only include boolean options
         return type === Boolean;
-    }).pluck(0).value();
+    }).map(0).value();
 
-    minCfg.string = _(mergedOptions).pairs().filter(function(pair) {
+    minCfg.string = _(mergedOptions).toPairs().filter(function(pair) {
         var type = pair[1] && pair[1].type || pair[1];
         // exclude aliases, booleans, and numbers
         return typeof type !== 'string' && type !== Boolean && type !== Number;
-    }).pluck(0).value();
+    }).map(0).value();
 
     minCfg.default = cfg.default || {};
 

@@ -45,8 +45,8 @@ function run(argv, cfg, sup) {
 
         if (parsed._.length) {
             if (!_.isEmpty(cfg.commands)) {
-                var aliases = _.zipObject(_(cfg.commands)
-                    .pairs()
+                var aliases = _.fromPairs(_(cfg.commands)
+                    .toPairs()
                     .filter(function(pair) {
                         return Array.isArray(pair[1].alias);
                     })
@@ -154,7 +154,7 @@ function run(argv, cfg, sup) {
                     }
                 })
                 .filter()
-                .zipObject()
+                .fromPairs()
                 .value()
             ;
 
@@ -166,7 +166,6 @@ function run(argv, cfg, sup) {
                     var name = changeCase.camelCase(arg.name);
                     named[name] = named[name] || [];
                 })
-                .run()
             ;
 
             return {
